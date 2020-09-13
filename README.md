@@ -5,3 +5,6 @@ If you're not familiar with these file formats, then you can read about sdt file
 
 # Usage
 Just point the program to your `maidata.txt` and it will convert it to an sdt file.
+
+# License
+This is an open-sourced application licensed under the [MIT License](https://github.com/donmai-me/MaiConverter/blob/master/LICENSE)
