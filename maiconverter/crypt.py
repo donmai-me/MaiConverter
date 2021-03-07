@@ -1,7 +1,7 @@
 import os
-from Crypto.Cipher import AES
-from binascii import hexlify, unhexlify
 import gzip
+from Crypto.Cipher import AES
+from binascii import unhexlify
 
 
 class MaiFinaleCrypt:
