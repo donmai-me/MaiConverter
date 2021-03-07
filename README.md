@@ -39,5 +39,10 @@ All output files are stored in 'output' folder in the same directory as the inpu
 ### Decrypting
 ```python encrypt_decrypt.py decrypt 'AES KEY HERE IN HEX' /path/to/file/or/directory```
 
+# TODOs
+Contributions are welcome and appreciated just make sure to format using Black.
+* simai_to_sdt.py should accept an actual simai file with simai fields (e.g. '&title=', '&inote_=')
+* Do `TODO`s scattered in the library especially in the lark file.
+
 # License
 This is an open-sourced application licensed under the [MIT License](https://github.com/donmai-me/MaiConverter/blob/master/LICENSE)
