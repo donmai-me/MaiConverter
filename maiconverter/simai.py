@@ -411,20 +411,20 @@ def simai_convert_to_fragment(
 
     positions = []
     for slide_note in slide_notes:
-        star = [star for star in tap_notes if star.position == slide_note.position]
+        stars = [star for star in tap_notes if star.position == slide_note.position]
         if counter > 0 and not slide_note.position in positions:
             fragment += "/"
 
-        if len(star) == 0 and not slide_note.position in positions:
+        if len(stars) == 0 and not slide_note.position in positions:
             # No star
             modifier_string = "?"
         elif (
-            star[0].note_type == NoteType.break_star
+            stars[0].note_type == NoteType.break_star
             and not slide_note.position in positions
         ):
             modifier_string = "b"
         elif (
-            star[0].note_type == NoteType.ex_star
+            stars[0].note_type == NoteType.ex_star
             and not slide_note.position in positions
         ):
             # Ex star
