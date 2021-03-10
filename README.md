@@ -5,6 +5,8 @@ Rewrite now includes a proper lark parser for simai and should handle more 3sima
 
 If you're not familiar with these file formats, then you can read about sdt files [here](https://listed.to/@donmai/18173/the-four-chart-formats-of-maimai-classic) and simai files [here](https://w.atwiki.jp/simai/pages/25.html). You can read about my blog post about this [here](https://listed.to/@donmai/18284/newly-released-simai-to-sdt-converter)
 
+If you're interested in anything maimai modding related, then go join [MaiMai TEA](https://discord.gg/82UR3e2akE) in Discord.
+
 # Dependencies 
 * [Pycryptodome](https://pypi.org/project/pycryptodome)
 * [Lark](https://pypi.org/project/lark-parser)
@@ -38,6 +40,11 @@ All output files are stored in 'output' folder in the same directory as the inpu
 
 ### Decrypting
 ```python encrypt_decrypt.py decrypt 'AES KEY HERE IN HEX' /path/to/file/or/directory```
+
+# TODOs
+Contributions are welcome and appreciated just make sure to format using Black.
+* simai_to_sdt.py should accept an actual simai file with simai fields (e.g. '&title=', '&inote_=')
+* Do `TODO`s scattered in the library especially in the lark file.
 
 # License
 This is an open-sourced application licensed under the [MIT License](https://github.com/donmai-me/MaiConverter/blob/master/LICENSE)
