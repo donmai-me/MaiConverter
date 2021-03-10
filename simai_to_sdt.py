@@ -73,10 +73,8 @@ def convert_simai_file(input_path, output_dir, convert_touch):
         print("File {} exists! Skipping".format(file_name + file_ext))
         return
 
-    simai_string = ""
     with open(input_path, "r") as in_f:
-        for line in in_f:
-            simai_string += line
+        simai_string = in_f.read()
 
     simai_chart = simai_parse_chart(simai_string)
 
