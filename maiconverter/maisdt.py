@@ -24,6 +24,8 @@ class MaiSDTStarNote(MaiNote):
         if amount < 0:
             raise ValueError("Star note amount is negative " + str(amount))
 
+        measure = round(10000.0 * measure) / 10000.0
+
         if is_break:
             super().__init__(measure, position, NoteType.break_star)
         else:
@@ -71,6 +73,9 @@ class MaiSDTSlideStartNote(MaiNote):
         elif delay < 0:
             raise ValueError("Slide delay is negative " + str(delay))
 
+        measure = round(10000.0 * measure) / 10000.0
+        duration = round(10000.0 * duration) / 10000.0
+        delay = round(10000.0 * delay) / 10000.0
         super().__init__(measure, position, NoteType.start_slide)
         self.slide_id = slide_id
         self.pattern = pattern
@@ -103,6 +108,7 @@ class MaiSDTSlideEndNote(MaiNote):
         elif pattern <= 0:
             raise ValueError("Slide pattern is not positive " + str(pattern))
 
+        measure = round(10000 * measure) / 10000
         super().__init__(measure, position, NoteType.end_slide)
         self.slide_id = slide_id
         self.pattern = pattern
@@ -127,6 +133,8 @@ class MaiSDTHoldNote(MaiNote):
         if duration <= 0:
             raise ValueError("Slide duration is not positive " + str(duration))
 
+        measure = round(10000.0 * measure) / 10000.0
+        duration = round(10000.0 * duration) / 10000.0
         super().__init__(measure, position, NoteType.hold)
         self.duration = duration
 
@@ -147,6 +155,7 @@ class MaiSDTTapNote(MaiNote):
             position: Button where the tap note happens.
             is_break: Whether a tap note is a break note.
         """
+        measure = round(10000.0 * measure) / 10000.0
         if is_break:
             super().__init__(measure, position, NoteType.break_tap)
         else:
