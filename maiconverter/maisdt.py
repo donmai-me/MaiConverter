@@ -288,6 +288,11 @@ class MaiSDT:
             raise TypeError("Unknown note type {}".format(note_type))
 
     def parse_srt_line(self, line: str) -> None:
+        srt_slide_to_later_dict = {
+            0: 1,
+            1: 3,
+            2: 2,
+        }
         values = line.rstrip().rstrip(",").replace(" ", "").split(",")
         if len(values) != 7:
             raise Exception("SRT should have 7 columns. Given: {}".format(line))
@@ -304,7 +309,7 @@ class MaiSDT:
                 delay = 0.25
                 duration = float(values[2])
                 # Slide patterns in SZT, and later, starts at 1
-                pattern = int(values[6]) + 1
+                pattern = srt_slide_to_later_dict.get(int(values[6]))
                 start_slide = {
                     "position": position,
                     "measure": measure,
