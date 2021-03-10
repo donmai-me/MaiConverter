@@ -444,7 +444,7 @@ def simai_convert_to_fragment(
             equivalent_bpm = round(current_bpm * scale * 10000.0) / 10000.0
             equivalent_duration = slide_note.duration * scale
             frac = Fraction(equivalent_duration).limit_denominator(1000)
-            fragment += "{}{}{}{}[{}#{}:{}]".format(
+            fragment += "{}{}{}{}[{:.2f}#{}:{}]".format(
                 start_position,
                 modifier_string,
                 pattern,
@@ -538,7 +538,7 @@ class SimaiChart:
         bpm_event = SimaiBPM(measure, bpm)
         self.bpms.append(bpm_event)
 
-    def get_bpm(self, measure) -> float:
+    def get_bpm(self, measure) -> Optional[float]:
         bpm_measures = [bpm.measure for bpm in self.bpms]
         bpm_measures = list(set(bpm_measures))
         bpm_measures.sort()
@@ -551,26 +551,80 @@ class SimaiChart:
                 break
 
         bpm_result = [bpm.bpm for bpm in self.bpms if bpm.measure == previous_measure]
-        return bpm_result[0]
+        if len(bpm_result) == 0:
+            return None
+        else:
+            return bpm_result[0]
 
     def export(self) -> str:
         measures = [note.measure for note in self.notes]
+
+        if len(self.bpms) == 0:
+            raise Exception("No BPMs defined")
+        elif self.get_bpm(1.0) is None:
+            raise Exception("No starting BPM defined")
+
         for bpm_event in self.bpms:
             measures.append(bpm_event.measure)
 
         measures = list(set(measures))
         measures.sort()
 
-        previous_divisor = 4
+        previous_measure_whole = 1
+        slide_hold_last_end_measure = 1.0
+        previous_divisor = None
         result = ""
         for (i, current_measure) in enumerate(measures):
+            bpm = [bpm for bpm in self.bpms if bpm.measure == current_measure]
+            notes = [note for note in self.notes if note.measure == current_measure]
+            hold_slides = [
+                note
+                for note in notes
+                if note.note_type
+                in [
+                    NoteType.hold,
+                    NoteType.ex_hold,
+                    NoteType.touch_hold,
+                    NoteType.complete_slide,
+                ]
+            ]
+            for hold_slide in hold_slides:
+                # Get measure where a hold or slide will end
+                if hold_slide.note_type == NoteType.complete_slide:
+                    end_measure = (
+                        current_measure + hold_slide.delay + hold_slide.duration
+                    )
+                else:
+                    end_measure = current_measure + hold_slide.duration
+
+                if end_measure > slide_hold_last_end_measure:
+                    # Assign greatest end measure
+                    slide_hold_last_end_measure = end_measure
+
+            if int(current_measure) > previous_measure_whole:
+                previous_measure_whole = int(current_measure)
+                result += "\n"
+
             # Why doesn't Python have a safe list 'get' method
             next_measure = measures[i + 1] if i + 1 < len(measures) else None
             if next_measure is None:
-                # We are at end so do nothing
-                current_divisor = previous_divisor
-                is_move_whole = False
-                whole, post_div, post_amount = None, None, None
+                # We are at the end so let's check if there's any
+                # active holds or slides
+                if slide_hold_last_end_measure > current_measure:
+                    (whole, post_div, post_amount) = simai_get_rest(
+                        current_measure, slide_hold_last_end_measure
+                    )
+                    if whole > 0:
+                        current_divisor = 1
+                        is_move_whole = True
+                    else:
+                        current_divisor = post_div
+                        is_move_whole = False
+                else:
+                    # Nothing to do
+                    current_divisor = previous_divisor
+                    is_move_whole = False
+                    whole, post_div, post_amount = None, None, None
             else:
                 # Determine if we'll move by whole notes or not
                 (whole, post_div, post_amount) = simai_get_rest(
@@ -583,8 +637,6 @@ class SimaiChart:
                     current_divisor = post_div
                     is_move_whole = False
 
-            bpm = [bpm for bpm in self.bpms if bpm.measure == current_measure]
-            notes = [note for note in self.notes if note.measure == current_measure]
             divisor = current_divisor if current_divisor != previous_divisor else None
 
             result += simai_convert_to_fragment(
@@ -602,7 +654,7 @@ class SimaiChart:
 
             previous_divisor = current_divisor
 
-        result += ",E"
+        result += ",\nE"
         return result
 
 
