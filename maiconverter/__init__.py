@@ -22,4 +22,4 @@ from .simai_lark_parser import SimaiTransformer
 from .maisdttosimai import sdt_to_simai
 from .simaitomaisdt import simai_to_sdt
 
-__version__ = "2.0.0_Public"
+__version__ = "2.1.0_Public"

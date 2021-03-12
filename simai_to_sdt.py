@@ -29,6 +29,13 @@ def main():
         const=True,
         help="Optional toggle to convert touch notes",
     )
+    parser.add_argument(
+        "-d",
+        "--delay",
+        metavar="Delay",
+        type=float,
+        help="Offset a chart by set measures (can be negative)",
+    )
 
     args = parser.parse_args()
 
@@ -54,10 +61,13 @@ def main():
 
         for file in files:
             convert_simai_file(
-                os.path.join(args.path, file), output_dir, args.convert_touch
+                os.path.join(args.path, file),
+                output_dir,
+                args.convert_touch,
+                args.delay,
             )
     elif not re.search(r".txt", args.path) is None:
-        convert_simai_file(args.path, output_dir, args.convert_touch)
+        convert_simai_file(args.path, output_dir, args.convert_touch, args.delay)
     else:
         print("Error: Not a simai file")
         sys.exit(1)
@@ -65,7 +75,7 @@ def main():
     sys.exit(0)
 
 
-def convert_simai_file(input_path, output_dir, convert_touch):
+def convert_simai_file(input_path, output_dir, convert_touch, delay):
     file_name = os.path.splitext(os.path.basename(input_path))[0]
     file_ext = ".sdt"
 
@@ -79,6 +89,9 @@ def convert_simai_file(input_path, output_dir, convert_touch):
     simai_chart = simai_parse_chart(simai_string)
 
     sdt = simai_to_sdt(simai_chart, convert_touch)
+    if delay is not None:
+        sdt.offset(delay)
+
     with open(os.path.join(output_dir, file_name + file_ext), "x") as out_f:
         out_f.write(sdt.export())
 

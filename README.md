@@ -17,7 +17,7 @@ Converts a simai file or a directory containing simai files to sdt.
 
 **NOTE**: This is a proof of concept and does **not** accept a complete simai file. The input file should only contain the chart for one difficulty with no "&inote_=" or any simai fields.
 
-All output files are stored in 'output' folder in the same directory as the input. Unless output directory is specified by using the --output or -o parameter.
+All output files are stored in 'output' folder in the same directory as the input. Unless output directory is specified by using the --output or -o parameter. Touch notes can be converted by adding the --convert-touch or -ct parameter. You can offset all the notes by adding the --delay or -d parameter.
 
 ```python simai_to_sdt.py /path/to/file/or/directory```
 
@@ -26,7 +26,7 @@ Converts an s\*t file or a directory containing s\*t files to simai.
 
 **NOTE**: This is a proof of concept and does **not** produce a complete simai file. The output file only contains the chart for one difficulty with no "&inote_=" or any simai fields.
 
-All output files are stored in 'output' folder in the same directory as the input. Unless output directory is specified by using the --output or -o parameter. You need to specify the bpm of the song by using the `--bpm` parameter
+All output files are stored in 'output' folder in the same directory as the input. Unless output directory is specified by using the --output or -o parameter. You need to specify the bpm of the song by using the `--bpm` parameter. You can offset all the notes by adding the --delay or -d parameter.
 
 ```python sxt_to_simai.py --bpm 120 /path/to/file/or/directory```
 

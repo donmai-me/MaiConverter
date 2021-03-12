@@ -44,6 +44,8 @@ class SimaiHoldNote(SimaiNote):
     def __init__(
         self, measure: float, position: int, duration: float, is_ex: bool = False
     ) -> None:
+        measure = round(10000.0 * measure) / 10000.0
+        duration = round(10000.0 * duration) / 10000.0
         if is_ex:
             super().__init__(measure, position, NoteType.ex_hold)
         else:
@@ -61,6 +63,7 @@ class SimaiTapNote(SimaiNote):
         is_star: bool = False,
         is_ex: bool = False,
     ) -> None:
+        measure = round(10000.0 * measure) / 10000.0
         if is_ex and is_star:
             super().__init__(measure, position, NoteType.ex_star)
         elif is_ex and not is_star:
@@ -108,6 +111,9 @@ class SimaiSlideNote(SimaiNote):
             ValueError: When duration is not positive
                 or when delay is negative
         """
+        measure = round(10000.0 * measure) / 10000.0
+        duration = round(10000.0 * duration) / 10000.0
+        delay = round(10000.0 * delay) / 10000.0
         if duration <= 0:
             raise ValueError("Duration is not positive " + str(duration))
         elif delay < 0:
@@ -129,9 +135,9 @@ class SimaiTouchTapNote(SimaiNote):
     def __init__(
         self, measure: float, position: int, zone: str, is_firework: bool = False
     ) -> None:
-        measure_rounded = round(measure * 10000.0) / 10000.0
+        measure = round(measure * 10000.0) / 10000.0
 
-        super().__init__(measure_rounded, position, NoteType.touch_tap)
+        super().__init__(measure, position, NoteType.touch_tap)
         self.is_firework = is_firework
         self.zone = zone
 
@@ -145,13 +151,13 @@ class SimaiTouchHoldNote(SimaiNote):
         duration: float,
         is_firework: bool = False,
     ) -> None:
-        measure_rounded = round(measure * 10000.0) / 10000.0
-        duration_rounded = round(duration * 10000.0) / 10000.0
+        measure = round(measure * 10000.0) / 10000.0
+        duration = round(duration * 10000.0) / 10000.0
 
-        super().__init__(measure_rounded, position, NoteType.touch_hold)
+        super().__init__(measure, position, NoteType.touch_hold)
         self.is_firework = is_firework
         self.zone = zone
-        self.duration = duration_rounded
+        self.duration = duration
 
 
 class SimaiBPM(Event):
@@ -159,9 +165,9 @@ class SimaiBPM(Event):
         if bpm <= 0:
             raise ValueError("BPM is not positive " + str(bpm))
 
-        measure_rounded = round(measure * 10000.0) / 10000.0
+        measure = round(measure * 10000.0) / 10000.0
 
-        super().__init__(measure_rounded, EventType.bpm)
+        super().__init__(measure, EventType.bpm)
         self.bpm = bpm
 
 
@@ -555,6 +561,18 @@ class SimaiChart:
             return None
         else:
             return bpm_result[0]
+
+    def offset(self, offset: float) -> None:
+        for note in self.notes:
+            new_measure = round((note.measure + offset) * 10000.0) / 10000.0
+            note.measure = new_measure
+
+        for event in self.bpms:
+            if event.measure == 1.0:
+                continue
+
+            new_measure = round((event.measure + offset) * 10000.0) / 10000.0
+            event.measure = new_measure
 
     def export(self) -> str:
         measures = [note.measure for note in self.notes]

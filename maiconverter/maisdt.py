@@ -465,6 +465,11 @@ class MaiSDT:
         self.notes.append(start_slide)
         self.notes.append(end_slide)
 
+    def offset(self, offset: float) -> None:
+        for note in self.notes:
+            new_measure = round((note.measure + offset) * 10000.0) / 10000.0
+            note.measure = new_measure
+
     def export(self) -> str:
         """Generates an sdt text from all the notes defined.
 

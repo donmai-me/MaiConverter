@@ -26,6 +26,13 @@ def main():
         type=dir_path,
         help="Path to output. Defaults to " + "/path/to/input/output",
     )
+    parser.add_argument(
+        "-d",
+        "--delay",
+        metavar="Delay",
+        type=float,
+        help="Offset a chart by set measures (can be negative)",
+    )
 
     args = parser.parse_args()
 
@@ -55,9 +62,11 @@ def main():
         files = [file for file in files if not re.search(r"\.s..", file) is None]
 
         for file in files:
-            convert_sdt_file(os.path.join(args.path, file), output_dir, args.bpm)
+            convert_sdt_file(
+                os.path.join(args.path, file), output_dir, args.bpm, args.delay
+            )
     elif not re.search(r"\.s..", args.path) is None:
-        convert_sdt_file(args.path, output_dir, args.bpm)
+        convert_sdt_file(args.path, output_dir, args.bpm, args.delay)
     else:
         print("Error: Not an sdt file")
         sys.exit(1)
@@ -65,7 +74,7 @@ def main():
     sys.exit(0)
 
 
-def convert_sdt_file(input_path, output_dir, initial_bpm):
+def convert_sdt_file(input_path, output_dir, initial_bpm, delay):
     sdt = MaiSDT()
 
     file_name = os.path.splitext(os.path.basename(input_path))[0]
@@ -86,6 +95,8 @@ def convert_sdt_file(input_path, output_dir, initial_bpm):
                 sdt.parse_srt_line(line)
 
     simai_chart = sdt_to_simai(sdt, initial_bpm)
+    if delay is not None:
+        simai_chart.offset(delay)
 
     with open(os.path.join(output_dir, file_name + file_ext), "x") as out_f:
         out_f.write(simai_chart.export())
