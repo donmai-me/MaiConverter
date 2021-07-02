@@ -1,8 +1,8 @@
-from maiconverter import MaiFinaleCrypt
 import argparse
 import os
-import sys
 import re
+
+from maiconverter.maicrypt import MaiFinaleCrypt
 
 
 def main():
@@ -151,16 +151,16 @@ def handle_db(input_path, output_dir, command, key):
 def file_path(string):
     if os.path.exists(string):
         return string.rstrip("/\\")
-    else:
-        raise FileNotFoundError(string)
+
+    raise FileNotFoundError(string)
 
 
 # Only accepts directory paths
 def dir_path(string):
     if os.path.isdir(string):
         return string.rstrip("/\\")
-    else:
-        raise NotADirectoryError(string)
+
+    raise NotADirectoryError(string)
 
 
 if __name__ == "__main__":

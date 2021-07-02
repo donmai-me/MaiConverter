@@ -1,0 +1,40 @@
+// Do not pass empty strings or "E"
+
+// TODO: There are still some edge cases that this lark file doesn't
+// cover. Mostly stuff that falls under "Special format" in 
+// https://w.atwiki.jp/simai/pages/25.html
+// But I hate the simai format and implementing these are as fun as
+// playing Pandora Paradoxxx Re:master.
+
+?start: chain
+
+?value: slide_note
+      | tap_hold_note
+      | divisor
+      | touch_tap_hold_note
+      | bpm
+      | pseudo_each
+
+chain: value ("/"? value)*
+
+duration: "[" /(\d+(\.\d*)?#)/? INT ":" INT "]"
+// duration: "[" equivalent_bpm INT ":" INT "]"
+
+bpm: "(" NUMBER ")"
+divisor: "{" INT "}"
+
+tap_hold_note: /[0-8][hbex$]*/ duration?
+
+slide_beg: /[0-8][b@x?$!]*([-^<>szvw]|p{1,2}|q{1,2}|V[0-8])[0-8]/
+slide_note: slide_beg duration chained_slide_note*
+chained_slide_note: "*" /[b@ex?$!]*([-^<>szvw]|p{1,2}|q{1,2}|V[0-8])[0-8]/ duration
+
+touch_tap_hold_note: /((C[012]?)|(B[0-8])|(E[0-8])|(A[0-8])|(D[0-8]))[hfe]*/ duration?
+
+pseudo_each: "`" (slide_note | tap_hold_note | touch_tap_hold_note)
+
+%import common.INT
+%import common.DECIMAL
+%import common.NUMBER
+%import common.WS
+%ignore WS

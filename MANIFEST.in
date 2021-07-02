@@ -1,0 +1,5 @@
+include CHANGELOG.md
+include README.md
+include LICENSE
+include how_to_make_charts.md
+recursive-include *.lark

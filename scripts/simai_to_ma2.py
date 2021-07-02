@@ -3,21 +3,16 @@ import argparse
 import re
 import sys
 
-from maiconverter import MaiSDT, sdt_to_simai
+from maiconverter.simai import SimaiChart
+from maiconverter.converter import simai_to_ma2
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Converts sdt to simai", allow_abbrev=False
+        description="Converts simai to ma2", allow_abbrev=False
     )
     parser.add_argument(
         "path", metavar="Path", type=file_path, help="Path to score file or directory"
-    )
-    parser.add_argument(
-        "--bpm",
-        metavar="Song BPM",
-        type=bpm_type,
-        help="BPM of the chart or group of chart's song",
     )
     parser.add_argument(
         "-o",
@@ -35,11 +30,6 @@ def main():
     )
 
     args = parser.parse_args()
-
-    if args.bpm is None:
-        print("Error: BPM is required")
-        parser.print_help()
-        sys.exit(1)
 
     if args.output is None and os.path.isdir(args.path):
         output_dir = os.path.join(args.path, "output")
@@ -59,70 +49,54 @@ def main():
             file for file in files if os.path.isfile(os.path.join(args.path, file))
         ]
 
-        files = [file for file in files if not re.search(r"\.s..", file) is None]
+        files = [file for file in files if not re.search(r".txt", file) is None]
 
         for file in files:
-            convert_sdt_file(
-                os.path.join(args.path, file), output_dir, args.bpm, args.delay
-            )
-    elif not re.search(r"\.s..", args.path) is None:
-        convert_sdt_file(args.path, output_dir, args.bpm, args.delay)
+            convert_simai_file(os.path.join(args.path, file), output_dir, args.delay)
+    elif not re.search(r".txt", args.path) is None:
+        convert_simai_file(args.path, output_dir, args.delay)
     else:
-        print("Error: Not an sdt file")
+        print("Error: Not a simai file")
         sys.exit(1)
 
     sys.exit(0)
 
 
-def convert_sdt_file(input_path, output_dir, initial_bpm, delay):
-    sdt = MaiSDT()
-
+def convert_simai_file(input_path, output_dir, delay):
     file_name = os.path.splitext(os.path.basename(input_path))[0]
-    file_ext = ".txt"
+    file_ext = ".ma2"
 
     if os.path.exists(os.path.join(output_dir, file_name + file_ext)):
         print("File {} exists! Skipping".format(file_name + file_ext))
         return
 
     with open(input_path, "r") as in_f:
-        for line in in_f:
-            if line in ["\n", "\r\n"]:
-                continue
+        simai_string = in_f.read()
 
-            if re.search(r"\.sr.", input_path) is None:
-                sdt.parse_line(line)
-            else:
-                sdt.parse_srt_line(line)
+    simai_chart = SimaiChart.from_str(simai_string)
 
-    simai_chart = sdt_to_simai(sdt, initial_bpm)
+    ma2 = simai_to_ma2(simai_chart)
     if delay is not None:
-        simai_chart.offset(delay)
+        ma2.offset(delay)
 
     with open(os.path.join(output_dir, file_name + file_ext), "x") as out_f:
-        out_f.write(simai_chart.export())
+        out_f.write(ma2.export())
 
 
 # Accepts both file and directory paths
 def file_path(string):
     if os.path.exists(string):
         return string.rstrip("/\\")
-    else:
-        raise FileNotFoundError(string)
+
+    raise FileNotFoundError(string)
 
 
 # Only accepts directory paths
 def dir_path(string):
     if os.path.isdir(string):
         return string.rstrip("/\\")
-    else:
-        raise NotADirectoryError(string)
 
-
-def bpm_type(number):
-    try:
-        return float(number)
-    except:
-        raise TypeError("BPM is not a number")
+    raise NotADirectoryError(string)
 
 
 if __name__ == "__main__":

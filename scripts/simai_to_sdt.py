@@ -3,7 +3,8 @@ import argparse
 import re
 import sys
 
-from maiconverter import simai_to_sdt, simai_parse_chart
+from maiconverter.simai import SimaiChart
+from maiconverter.converter import simai_to_sdt
 
 
 def main():
@@ -86,7 +87,7 @@ def convert_simai_file(input_path, output_dir, convert_touch, delay):
     with open(input_path, "r") as in_f:
         simai_string = in_f.read()
 
-    simai_chart = simai_parse_chart(simai_string)
+    simai_chart = SimaiChart.from_str(simai_string)
 
     sdt = simai_to_sdt(simai_chart, convert_touch)
     if delay is not None:
@@ -100,16 +101,16 @@ def convert_simai_file(input_path, output_dir, convert_touch, delay):
 def file_path(string):
     if os.path.exists(string):
         return string.rstrip("/\\")
-    else:
-        raise FileNotFoundError(string)
+
+    raise FileNotFoundError(string)
 
 
 # Only accepts directory paths
 def dir_path(string):
     if os.path.isdir(string):
         return string.rstrip("/\\")
-    else:
-        raise NotADirectoryError(string)
+
+    raise NotADirectoryError(string)
 
 
 if __name__ == "__main__":

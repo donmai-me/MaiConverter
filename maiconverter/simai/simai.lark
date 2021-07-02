@@ -1,0 +1,45 @@
+// Grammar for a simai file
+// TODO: Check if all possible simai entries are here
+
+?start: chain
+
+chain: value value*
+
+?value: title
+      | artist
+      | smsg
+      | des
+      | first
+      | wholebpm
+      | level
+      | chart
+      | amsg_first
+      | amsg_time
+      | amsg_content
+      | demo_seek
+      | demo_len
+      | NEWLINE
+
+title: "&title=" STRING
+artist: "&artist=" STRING
+smsg: "&smsg" ("_" INT)? "=" STRING
+des: "&des" ("_" INT)? "=" STRING
+first: "&first" ("_" INT)? "=" NUMBER
+wholebpm: "&wholebpm=" STRING
+// String because simai
+level: "&lv_" INT "=" STRING
+chart: "&inote_" INT "=" MULTILINE_STRING
+amsg_first: "&amsg_first=" FLOAT
+amsg_time: "&amsg_time=" MULTILINE_STRING
+amsg_content: "&amsg_content=" /\s*(┃.+(\r?\n)*)+/
+demo_seek: "&demo_seek=" NUMBER
+demo_len: "&demo_len=" NUMBER
+
+STRING: /[^\r\n]+/
+MULTILINE_STRING: /([\s\r\n]*[^&\r\n]+)+/
+
+%import common.INT
+%import common.FLOAT
+%import common.NUMBER
+%import common.NEWLINE
+%import common.WS
