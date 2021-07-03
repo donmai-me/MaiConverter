@@ -75,12 +75,12 @@ If you don't know the order of arguments of an `add` function, then invoke the f
 >>> simai.add_tap(measure=50.5, position=5, is_star=True)
 >>> simai.add_slide(measure=50.5, start_postion=5, end_position=1, duration=0.75, pattern=">")
 # Add a touch tap note in measure 70, at E5
->>> simai.add_touch_tap(measure=70, position=5, zone="E")
+>>> simai.add_touch_tap(measure=70, position=5, region="E")
 # Add a firework touch hold note in measure 70.5, at C with a duration of 1 measure.
->>> simai.add_touch_hold(measure=70.5, position=0, zone="C", duration=1, is_firework=True)
+>>> simai.add_touch_hold(measure=70.5, position=0, region="C", duration=1, is_firework=True)
 ```
 
-For every `add_tap` and `add_slide` functions, there are corresponding `del_tap` and `del_slde` functions. The only parameters that the del functions need are the measure and button where a note happened. For `del_touch_tap` and `del_touch_hold` functions, the measure, location, and touch zone are required.
+For every `add_tap` and `add_slide` functions, there are corresponding `del_tap` and `del_slde` functions. The only parameters that the del functions need are the measure and button where a note happened. For `del_touch_tap` and `del_touch_hold` functions, the measure, location, and touch region are required.
 
 ```python
 # Delete tap note at measure 6.125 at button 0
