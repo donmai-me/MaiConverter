@@ -17,7 +17,16 @@ class SimaiTransformer(Transformer):
     def des(self, n):
         pass
 
+    def freemsg(self, n):
+        pass
+
     def first(self, n):
+        pass
+
+    def pvstart(self, n):
+        pass
+
+    def pvend(self, n):
         pass
 
     def wholebpm(self, n):
@@ -72,9 +81,12 @@ class FragmentTransformer(Transformer):
 
     def divisor(self, n) -> dict:
         (n,) = n
+        if float(n) == 0:
+            raise ValueError("Divisor is 0.")
+
         event_dict = {
             "type": "divisor",
-            "value": int(n),
+            "value": float(n),
         }
         return event_dict
 

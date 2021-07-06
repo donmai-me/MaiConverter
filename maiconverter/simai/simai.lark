@@ -9,7 +9,10 @@ chain: value value*
       | artist
       | smsg
       | des
+      | freemsg
       | first
+      | pvstart
+      | pvend
       | wholebpm
       | level
       | chart
@@ -24,7 +27,10 @@ title: "&title=" STRING
 artist: "&artist=" STRING
 smsg: "&smsg" ("_" INT)? "=" STRING
 des: "&des" ("_" INT)? "=" STRING
+freemsg: "&freemsg=" MULTILINE_STRING
 first: "&first" ("_" INT)? "=" NUMBER
+pvstart: "&PVStart=" NUMBER
+pvend: "&PVEnd=" NUMBER
 wholebpm: "&wholebpm=" STRING
 // String because simai
 level: "&lv_" INT "=" STRING
