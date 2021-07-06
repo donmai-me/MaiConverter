@@ -565,8 +565,7 @@ class SimaiChart:
         measures += [1.0]
 
         measures.sort()
-        measure_wholes = [int(i) for i in measures]
-        measures += measure_wholes
+        measures += [int(i) for i in measures]
         measures = list(set(measures))
         measures.sort()
 

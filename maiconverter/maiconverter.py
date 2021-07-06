@@ -134,7 +134,7 @@ def chart_convert(args, output):
 
 
 def handle_ma2(file, name, output_path, args):
-    ma2 = MaiMa2.open(file)
+    ma2 = MaiMa2.open(file, encoding=args.encoding)
     if len(args.delay) != 0:
         ma2.offset(args.delay)
 
@@ -145,7 +145,9 @@ def handle_ma2(file, name, output_path, args):
         simai = ma2_to_simai(ma2)
         ext = ".txt"
 
-    with open(os.path.join(output_path, name + ext), "w+", newline="\r\n") as out:
+    with open(
+        os.path.join(output_path, name + ext), "w+", newline="\r\n", encoding="utf-8"
+    ) as out:
         if args.command == "ma2tosimai":
             out.write(simai.export(max_den=args.max_divisor))
         else:
@@ -153,7 +155,7 @@ def handle_ma2(file, name, output_path, args):
 
 
 def handle_sdt(file, name, output_path, args):
-    sdt = MaiSDT.open(file)
+    sdt = MaiSDT.open(file, encoding=args.encoding)
     if len(args.delay) != 0:
         sdt.offset(args.delay)
 
@@ -164,7 +166,9 @@ def handle_sdt(file, name, output_path, args):
         simai = sdt_to_simai(sdt, initial_bpm=args.bpm)
         ext = ".txt"
 
-    with open(os.path.join(output_path, name + ext), "w+", newline="\r\n") as out:
+    with open(
+        os.path.join(output_path, name + ext), "w+", newline="\r\n", encoding="utf-8"
+    ) as out:
         if args.command == "sdttosimai":
             out.write(simai.export(max_den=args.max_divisor))
         else:
@@ -172,7 +176,7 @@ def handle_sdt(file, name, output_path, args):
 
 
 def handle_simai_chart(file, name, output_path, args):
-    with open(file, "r") as f:
+    with open(file, "r", encoding=args.encoding) as f:
         chart_text = f.read()
 
     simai = SimaiChart.from_str(chart_text, message=f"Parsing Simai chart at {file}...")
@@ -186,12 +190,14 @@ def handle_simai_chart(file, name, output_path, args):
         ext = ".ma2"
         converted = simai_to_ma2(simai, res=args.resolution)
 
-    with open(os.path.join(output_path, name + ext), "w+", newline="\r\n") as out:
+    with open(
+        os.path.join(output_path, name + ext), "w+", newline="\r\n", encoding="utf-8"
+    ) as out:
         out.write(converted.export())
 
 
 def handle_simai_file(file, name, output_path, args):
-    title, charts = parse_file(file)
+    title, charts = parse_file(file, encoding=args.encoding)
     for i, chart in enumerate(charts):
         diff, simai_chart = chart
         if len(args.delay) != 0:
@@ -207,7 +213,10 @@ def handle_simai_file(file, name, output_path, args):
 
             name = title + f"_{diff}"
             with open(
-                os.path.join(output_path, name + ext), "w+", newline="\r\n"
+                os.path.join(output_path, name + ext),
+                "w+",
+                newline="\r\n",
+                encoding="utf-8",
             ) as out:
                 out.write(converted.export())
         except Exception as e:
@@ -234,7 +243,12 @@ def handle_file(input_path, output_dir, command, key):
             return
 
         plain_text = finale_chart_decrypt(key, input_path)
-        with open(os.path.join(output_dir, file_name + file_ext), "x") as f:
+        with open(
+            os.path.join(output_dir, file_name + file_ext),
+            "x",
+            newline="\r\n",
+            encoding="utf-8",
+        ) as f:
             f.write(plain_text)
 
 
@@ -258,7 +272,10 @@ def handle_db(input_path, output_dir, command, key):
 
         plain_text = finale_db_decrypt(key, input_path)
         with open(
-            os.path.join(output_dir, file_name + file_ext), "x", newline="\r\n"
+            os.path.join(output_dir, file_name + file_ext),
+            "x",
+            newline="\r\n",
+            encoding="utf-8",
         ) as f:
             f.write(plain_text)
 
@@ -333,6 +350,13 @@ def main():
         metavar="Output directory",
         type=dir_path,
         help="Path to output. Defaults to /path/to/input/output",
+    )
+    parser.add_argument(
+        "-e",
+        "--encoding",
+        type=str,
+        default="utf-8",
+        help="Specify encoding of source file. Defaults to utf-8",
     )
 
     args = parser.parse_args()

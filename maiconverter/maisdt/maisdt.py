@@ -24,9 +24,9 @@ class MaiSDT:
         self.slide_count = 1
 
     @classmethod
-    def open(cls, path: str) -> MaiSDT:
+    def open(cls, path: str, encoding: str = "utf-8") -> MaiSDT:
         sdt = cls()
-        with open(path, "r") as file:
+        with open(path, "r", encoding=encoding) as file:
             for line in file:
                 if line in ["\n", "\r\n"]:
                     continue

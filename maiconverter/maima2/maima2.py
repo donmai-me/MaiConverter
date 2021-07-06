@@ -103,9 +103,9 @@ class MaiMa2:
         }
 
     @classmethod
-    def open(cls, path: str) -> MaiMa2:
+    def open(cls, path: str, encoding: str = "utf-8") -> MaiMa2:
         ma2 = cls()
-        with open(path, "r") as in_f:
+        with open(path, "r", encoding=encoding) as in_f:
             for line in in_f:
                 if line in ["\n", "\r\n"]:
                     continue
