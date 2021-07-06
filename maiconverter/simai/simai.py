@@ -35,7 +35,7 @@ class SimaiChart:
             Union[TapNote, HoldNote, SlideNote, TouchTapNote, TouchHoldNote]
         ] = []
         self.bpms: List[BPM] = []
-        self._divisor: Optional[int] = None
+        self._divisor: Optional[float] = None
         self._measure = 1.0
 
     @classmethod

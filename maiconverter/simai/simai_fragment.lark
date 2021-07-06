@@ -21,7 +21,7 @@ duration: "[" /(\d+(\.\d*)?#)/? INT ":" INT "]"
 // duration: "[" equivalent_bpm INT ":" INT "]"
 
 bpm: "(" NUMBER ")"
-divisor: "{" INT "}"
+divisor: "{" NUMBER "}"
 
 tap_hold_note: /[0-8][hbex$]*/ duration?
 
