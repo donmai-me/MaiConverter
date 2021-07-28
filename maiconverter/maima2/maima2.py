@@ -146,7 +146,6 @@ class MaiMa2:
             >>> ma2.set_bpm(0, 180)
             >>> ma2.set_bpm(12, 250)
         """
-        measure = round(measure * 10000.0) / 10000.0
         self.del_bpm(measure)
         self.bpms.append(BPM(measure, bpm))
 
@@ -179,7 +178,6 @@ class MaiMa2:
         if measure < 0:
             raise ValueError(f"Measure is negative {measure}")
 
-        measure = round(measure * 10000.0) / 10000.0
         bpm_measures = [bpm.measure for bpm in self.bpms]
         bpm_measures = list(set(bpm_measures))
         bpm_measures.sort()
@@ -237,7 +235,6 @@ class MaiMa2:
             >>> ma2.set_meter(0, 4, 4)
             >>> ma2.set_meter(5, 6, 8)
         """
-        measure = round(measure * 10000.0) / 10000.0
         self.meters.append(Meter(measure, meter_numerator, meter_denominator))
 
     def get_meter(self, measure) -> Tuple[int, int]:
@@ -271,7 +268,6 @@ class MaiMa2:
         if measure < 0:
             raise ValueError("Measure is negative number " + str(measure))
 
-        measure = round(measure * 10000.0) / 10000.0
         meter_measures = [meter.measure for meter in self.meters]
         meter_measures = list(set(meter_measures))
         meter_measures.sort()
@@ -287,10 +283,12 @@ class MaiMa2:
                 break
 
         meter_result = [
-            meter for meter in self.meters if meter.measure == previous_measure
+            meter
+            for meter in self.meters
+            if math.isclose(meter.measure, previous_measure, abs_tol=0.0001)
         ]
 
-        return (meter_result[0].numerator, meter_result[0].denominator)
+        return meter_result[0].numerator, meter_result[0].denominator
 
     def get_bpm_statistic(self) -> Tuple[float, float, float, float]:
         """Reads all the BPM defined and provides statistics.
@@ -335,7 +333,7 @@ class MaiMa2:
             if bpm_duration[bpm] > bpm_duration[mode_bpm]:
                 mode_bpm = bpm
 
-        return (starting_bpm, mode_bpm, highest_bpm, lowest_bpm)
+        return starting_bpm, mode_bpm, highest_bpm, lowest_bpm
 
     def get_header(self) -> str:
         """Generates a 7 line header required in ma2 formats.

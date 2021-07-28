@@ -1,4 +1,6 @@
 import enum
+import math
+from functools import total_ordering
 
 from .event import Event, EventType
 
@@ -44,136 +46,46 @@ class Note(Event):
         self.note_type = note_type
 
     def __key(self):
-        return (self.measure, self.event_type, self.position, self.note_type)
+        return self.measure, self.event_type, self.position, self.note_type
 
 
+@total_ordering
 class MaiNote(Note):
     def __hash__(self):
         return hash(self.__key())
 
     def __lt__(self, other):
-        if (
-            (self.note_type == 4)
-            and (other.note_type == 0)
-            and (self.measure == other.measure)
-        ):
-            return True
-        elif self.measure == other.measure:
+        if math.isclose(self.measure, other.measure, abs_tol=0.0001):
+            if self.position == other.position:
+                return self.note_type.value < other.note_type.value
             return self.position < other.position
-        else:
-            return self.measure < other.measure
-
-    def __gt__(self, other):
-        if (
-            (self.note_type == 4)
-            and (other.note_type == 0)
-            and (self.measure == other.measure)
-        ):
-            return False
-        elif self.measure == other.measure:
-            return self.position > other.position
-        else:
-            return self.measure > other.measure
-
-    def __le__(self, other):
-        if (
-            (self.note_type == 4)
-            and (other.note_type == 0)
-            and (self.measure == other.measure)
-        ):
-            return True
-        elif self.measure == other.measure:
-            return self.position <= other.position
-        else:
-            return self.measure <= other.measure
-
-    def __ge__(self, other):
-        if (
-            (self.note_type == 4)
-            and (other.note_type == 0)
-            and (self.measure == other.measure)
-        ):
-            return False
-        elif self.measure == other.measure:
-            return self.position >= other.position
-        else:
-            return self.measure >= other.measure
+        return self.measure < other.measure
 
     def __eq__(self, other):
-        if (
-            (self.note_type == 4)
-            and (other.note_type == 0)
-            and (self.measure == other.measure)
-        ):
-            return False
-        elif self.measure == other.measure:
-            return self.position == other.position
-        else:
-            return self.measure == other.measure
-
-    def __ne__(self, other):
-        if (
-            (self.note_type == 4)
-            and (other.note_type == 0)
-            and (self.measure == other.measure)
-        ):
-            return True
-        elif self.measure == other.measure:
-            return self.position != other.position
-        else:
-            return self.measure != other.measure
+        return (
+            math.isclose(self.measure, other.measure, abs_tol=0.0001)
+            and self.position == other.position
+            and self.note_type.value == other.note_type.value
+        )
 
 
+@total_ordering
 class SimaiNote(Note):
     def __hash__(self):
         return hash(self.__key())
 
     def __lt__(self, other):
-        if self.measure == other.measure:
+        if math.isclose(self.measure, other.measure, abs_tol=0.0001):
             if self.note_type == other.note_type:
                 return self.position < other.position
             else:
-                return self.note_type < other.note_type
+                return self.note_type.value < other.note_type.value
         else:
             return self.measure < other.measure
 
-    def __gt__(self, other):
-        if self.measure == other.measure:
-            if self.note_type == other.note_type:
-                return self.position > other.position
-            else:
-                return self.note_type > other.note_type
-        else:
-            return self.measure > other.measure
-
-    def __le__(self, other):
-        if self.measure == other.measure:
-            if self.note_type == other.note_type:
-                return self.position <= other.position
-            else:
-                return self.note_type <= other.note_type
-        else:
-            return self.measure <= other.measure
-
-    def __ge__(self, other):
-        if self.measure == other.measure:
-            if self.note_type == other.note_type:
-                return self.position >= other.position
-            else:
-                return self.note_type >= other.note_type
-        else:
-            return self.measure >= other.measure
-
-    def __ne__(self, other):
-        return (
-            (self.measure != other.measure)
-            and (self.note_type != other.note_type)
-            and (self.position != other.position)
-        )
-
     def __eq__(self, other):
         return (
-            (self.measure == other.measure)
-            and (self.note_type == other.note_type)
-            and (self.position == other.position)
+            math.isclose(self.measure, other.measure, abs_tol=0.0001)
+            and self.note_type.value == other.note_type.value
+            and self.position == other.position
         )

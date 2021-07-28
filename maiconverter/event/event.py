@@ -12,5 +12,5 @@ class Event:
         if measure < 0:
             raise ValueError("Measure is negative " + str(measure))
 
-        self.measure = measure
+        self.measure = round(measure * 10000) / 10000
         self.event_type = event_type
