@@ -30,17 +30,12 @@ class MaiMa2:
     chart file.
 
     Attributes:
-        resolution (int): The internal resolution of the chart.
-            Used for time tracking purposes. See set_time method
-            for more information about ma2's time tracking.
         click_res (int): Like resolution but for CLK events.
         fes_mode (bool): Whether a chart is an utage.
         bpms (list[BPM]): Contains bpm events of the chart.
         meters (dict[float, Meter]): Contains meter events
             of the chart
         notes (list[MaiNote]): Contains notes of the chart.
-        compatible_code (str): Required for ma2's header. Copied
-            from official ma2 chart files.
         version (str): Required for ma2's header.Copied from
             official ma2 chart files.
         notes_stat (dict[str, int]): Tracks total number of
@@ -49,7 +44,6 @@ class MaiMa2:
 
     def __init__(
         self,
-        resolution: int = 384,
         click_res: int = 384,
         fes_mode: bool = False,
         version: str = MA2_VERSION,
@@ -57,7 +51,6 @@ class MaiMa2:
         """Produces a MaiMa2 object.
 
         Args:
-            resolution: Time tracking resolution.
             click_res: Like resolution but for CLK events.
             fes_mode: Whether a chart is an utage.
             version: Chart version.
@@ -76,12 +69,9 @@ class MaiMa2:
             >>> ma2 = MaiMa2(resolution=200, fes_mode=True)
         """
         # TODO: Remove compatible code and version attribute.
-        if resolution <= 0:
-            raise ValueError("Resolution is not positive " + str(resolution))
         if click_res <= 0:
-            raise ValueError("Click is not positive " + str(click_res))
+            raise ValueError(f"Click is not positive {click_res}")
 
-        self.resolution = resolution
         self.click_res = click_res
         self.fes_mode = fes_mode
         self.bpms: List[BPM] = []
@@ -835,7 +825,7 @@ class MaiMa2:
 
         return second_to_measure(seconds, bpms)
 
-    def export(self) -> str:
+    def export(self, resolution: int = 384) -> str:
         """Generates a ma2 text from all the notes and events defined.
 
         Returns:
@@ -850,7 +840,7 @@ class MaiMa2:
 
         self.notes.sort()
         for note in self.notes:
-            result += event_to_str(event=note, resolution=self.resolution)
+            result += event_to_str(event=note, resolution=resolution)
 
         result += "\n"
         result += self.get_epilog()

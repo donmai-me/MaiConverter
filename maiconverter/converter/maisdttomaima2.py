@@ -18,11 +18,10 @@ class StartSlide:
 def sdt_to_ma2(
     sdt: MaiSDT,
     initial_bpm: float,
-    res: int = 384,
     click_res: int = 384,
     fes_mode: bool = False,
 ) -> MaiMa2:
-    ma2 = MaiMa2(resolution=res, click_res=click_res, fes_mode=fes_mode)
+    ma2 = MaiMa2(click_res=click_res, fes_mode=fes_mode)
     ma2.set_bpm(0.0, initial_bpm)
     ma2.set_meter(0.0, 4, 4)
     convert_notes(ma2, sdt.notes)

@@ -160,7 +160,7 @@ def handle_sdt(file, name, output_path, args):
         sdt.offset(args.delay)
 
     if args.command == "sdttoma2":
-        output = sdt_to_ma2(sdt, initial_bpm=args.bpm, res=args.resolution)
+        output = sdt_to_ma2(sdt, initial_bpm=args.bpm)
         ext = ".ma2"
     else:
         output = sdt_to_simai(sdt, initial_bpm=args.bpm)
@@ -172,7 +172,7 @@ def handle_sdt(file, name, output_path, args):
         if isinstance(output, SimaiChart):
             out.write(output.export(max_den=args.max_divisor))
         else:
-            out.write(output.export())
+            out.write(output.export(resolution=args.resolution))
 
 
 def handle_simai_chart(file, name, output_path, args):
@@ -188,12 +188,12 @@ def handle_simai_chart(file, name, output_path, args):
         converted = simai_to_sdt(simai, convert_touch=args.convert_touch)
     else:
         ext = ".ma2"
-        converted = simai_to_ma2(simai, res=args.resolution)
+        converted = simai_to_ma2(simai)
 
     with open(
         os.path.join(output_path, name + ext), "w+", newline="\r\n", encoding="utf-8"
     ) as out:
-        out.write(converted.export())
+        out.write(converted.export(resolution=args.resolution))
 
 
 def handle_simai_file(file, output_path, args):
@@ -209,7 +209,7 @@ def handle_simai_file(file, output_path, args):
                 converted = simai_to_sdt(simai_chart, convert_touch=args.convert_touch)
             else:
                 ext = ".ma2"
-                converted = simai_to_ma2(simai_chart, res=args.resolution)
+                converted = simai_to_ma2(simai_chart)
 
             name = title + f"_{diff}"
             with open(
@@ -218,7 +218,10 @@ def handle_simai_file(file, output_path, args):
                 newline="\r\n",
                 encoding="utf-8",
             ) as out:
-                out.write(converted.export())
+                if isinstance(converted, MaiSDT):
+                    out.write(converted.export())
+                else:
+                    out.write(converted.export(resolution=args.resolution))
         except Exception as e:
             print(f"Error processing {i + 1} chart of file. {e}")
             traceback.print_exc()

@@ -14,9 +14,9 @@ from ..event import SimaiNote, NoteType
 
 
 def simai_to_ma2(
-    simai: SimaiChart, res: int = 384, click_res: int = 384, fes_mode: bool = False
+    simai: SimaiChart, click_res: int = 384, fes_mode: bool = False
 ) -> MaiMa2:
-    ma2 = MaiMa2(resolution=res, click_res=click_res, fes_mode=fes_mode)
+    ma2 = MaiMa2(click_res=click_res, fes_mode=fes_mode)
 
     for bpm in simai.bpms:
         if bpm.measure <= 1.0:
