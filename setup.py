@@ -27,6 +27,7 @@ setup(
         "maiconverter.maisdt",
         "maiconverter.simai",
         "maiconverter.converter",
+        "maiconverter.tool",
     ],
     package_data={"": ["*.lark"]},
     entry_points={

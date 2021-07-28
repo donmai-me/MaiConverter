@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import math
 from typing import Tuple, List, Union
 import copy
 
@@ -14,7 +16,7 @@ from .ma2note import (
 )
 from .tools import parse_v1
 from ..event import NoteType
-from ..time import measure_to_second, second_to_measure
+from ..tool import second_to_measure, measure_to_second
 
 # Latest chart version
 MA2_VERSION = "1.03.00"
@@ -790,57 +792,48 @@ class MaiMa2:
             self.notes_stat["THO"] -= 1
 
     def offset(self, offset: Union[float, str]) -> None:
-        initial_bpm = self.get_bpm(1.0)
         if isinstance(offset, float):
-            offset_abs = measure_to_second(offset, initial_bpm)
-        elif isinstance(offset, str) and offset[-1] in ["s", "S"]:
-            offset_abs = float(offset[:-1])
+            offset = offset
+        elif isinstance(offset, str) and offset[-1].lower() == "s":
+            offset = self.second_to_measure(float(offset[:-1]))
         elif isinstance(offset, str) and "/" in offset:
             fraction = offset.split("/")
             if len(fraction) != 2:
                 raise ValueError(f"Invalid fraction: {offset}")
 
-            offset_abs = measure_to_second(
-                int(fraction[0]) / int(fraction[1]), initial_bpm
-            )
+            offset = int(fraction[0]) / int(fraction[1])
         else:
-            offset_abs = measure_to_second(float(offset), initial_bpm)
+            offset = float(offset)
 
         for note in self.notes:
-            if note.measure <= 1.0:
-                current_eps_bpm = initial_bpm
-            else:
-                current_eps_bpm = self.get_bpm(note.measure - 0.0001)
-
-            offset_compensated = second_to_measure(offset_abs, current_eps_bpm)
-            note.measure = (
-                round((note.measure + offset_compensated) * 10000.0) / 10000.0
-            )
+            note.measure = round((note.measure + offset) * 10000.0) / 10000.0
 
         new_bpms = copy.deepcopy(self.bpms)
         for event in new_bpms:
             if event.measure <= 1.0:
                 continue
 
-            current_eps_bpm = self.get_bpm(event.measure - 0.0001)
-            offset_compensated = second_to_measure(offset_abs, current_eps_bpm)
-            event.measure = (
-                round((event.measure + offset_compensated) * 10000.0) / 10000.0
-            )
+            event.measure = round((event.measure + offset) * 10000.0) / 10000.0
 
         new_meters = copy.deepcopy(self.meters)
         for meter in new_meters:
             if meter.measure <= 1.0:
                 continue
 
-            current_eps_bpm = self.get_bpm(meter.measure - 0.0001)
-            offset_compensated = second_to_measure(offset_abs, current_eps_bpm)
-            meter.measure = (
-                round((meter.measure + offset_compensated) * 10000.0) / 10000.0
-            )
+            meter.measure = round((meter.measure + offset) * 10000.0) / 10000.0
 
         self.bpms = new_bpms
         self.meters = new_meters
+
+    def measure_to_second(self, measure: float) -> float:
+        bpms = [(bpm.measure, bpm.bpm) for bpm in self.bpms]
+
+        return measure_to_second(measure, bpms)
+
+    def second_to_measure(self, seconds: float) -> float:
+        bpms = [(bpm.measure, bpm.bpm) for bpm in self.bpms]
+
+        return second_to_measure(seconds, bpms)
 
     def export(self) -> str:
         """Generates a ma2 text from all the notes and events defined.

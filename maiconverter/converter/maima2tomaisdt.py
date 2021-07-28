@@ -46,42 +46,19 @@ def ma2_to_sdt(
     ] = _default_touch_converter,
     convert_touch: bool = False,
 ) -> MaiSDT:
-    sdt = MaiSDT()
+    initial_bpm = ma2.get_bpm(0)
+    sdt = MaiSDT(bpm=initial_bpm)
     convert_notes(sdt, ma2.notes, touch_converter, convert_touch)
     sdt.notes.sort()
 
-    # Compensate for bpm changes
-    event_list = [note for note in sdt.notes + ma2.bpms]
-
-    event_list.sort(key=lambda x: x.measure)
-    previous_measure = 0.0
-    equivalent_current_measure = 0.0
     equivalent_notes = []
-    initial_bpm = ma2.get_bpm(0)
-    for event in event_list:
-        current_measure = event.measure
-        current_bpm = ma2.get_bpm(current_measure)
+    for note in sdt.notes:
+        current_measure = note.measure
+        current_time = ma2.measure_to_second(current_measure)
+        scale = sdt.bpm / ma2.get_bpm(current_measure)
 
-        # current_bpm_eps takes the bpm slightly before the current measure
-        # for compensating gaps. This is because if there is a bpm change at
-        # the exact same time as a note, equivalent_gap will be wrongly affected.
-        if current_measure > 1.0:
-            current_bpm_eps = ma2.get_bpm(current_measure - 0.0001)
-        else:
-            current_bpm_eps = current_bpm
-
-        gap = current_measure - previous_measure
-        scale = initial_bpm / current_bpm
-        scale_inf = initial_bpm / current_bpm_eps
-        equivalent_gap = gap * scale_inf
-        equivalent_current_measure += equivalent_gap
-
-        previous_measure = current_measure
-        if not isinstance(event, MaiNote):
-            continue
-
-        note = copy.deepcopy(event)
-        note.measure = equivalent_current_measure
+        note = copy.deepcopy(note)
+        note.measure = sdt.second_to_measure(current_time)
 
         if isinstance(note, SDTHoldNote):
             note.duration = note.duration * scale

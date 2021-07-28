@@ -4,12 +4,12 @@ from typing import Union, List, Dict, Optional
 
 from .sdtnote import TapNote, HoldNote, SlideStartNote, SlideEndNote
 from ..event import NoteType
-from ..time import second_to_measure
+from ..tool import measure_to_second, second_to_measure
 
 
 class MaiSDT:
     """A class that represents one sdt chart. Only contains notes,
-    and does not include information such as bpm, song name,
+    and does not include information such as song name,
     chart difficulty, composer, chart maker, etc.
     It only contains enough information to build a working sdt
     chart file.
@@ -385,25 +385,28 @@ class MaiSDT:
         for star_note in star_notes:
             star_note.amount -= 1
 
-    def offset(self, offset: Union[float, str], bpm: Optional[float] = None) -> None:
+    def offset(self, offset: Union[float, str]) -> None:
         if isinstance(offset, float):
-            offset_mes = offset
-        elif isinstance(offset, str) and offset[-1] in ["s", "S"]:
-            if bpm is None:
-                raise ValueError("No BPM given")
-
-            offset_mes = second_to_measure(float(offset[:-1]), bpm)
+            offset = offset
+        elif isinstance(offset, str) and offset[-1].lower() == "s":
+            offset = self.second_to_measure(float(offset[:-1]))
         elif isinstance(offset, str) and "/" in offset:
             fraction = offset.split("/")
             if len(fraction) != 2:
                 raise ValueError(f"Invalid fraction: {offset}")
 
-            offset_mes = int(fraction[0]) / int(fraction[1])
+            offset = int(fraction[0]) / int(fraction[1])
         else:
-            offset_mes = float(offset)
+            offset = float(offset)
 
         for note in self.notes:
-            note.measure = round((note.measure + offset_mes) * 10000.0) / 10000.0
+            note.measure = round((note.measure + offset) * 10000.0) / 10000.0
+
+    def measure_to_second(self, measure: float) -> float:
+        return measure_to_second(measure, [(0.0, self.bpm)])
+
+    def second_to_measure(self, seconds: float) -> float:
+        return second_to_measure(seconds, [(0.0, self.bpm)])
 
     def export(self) -> str:
         """Generates an sdt text from all the notes defined.
