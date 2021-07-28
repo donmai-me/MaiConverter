@@ -7,14 +7,15 @@ from ..event import NoteType
 from ..tool import measure_to_second, second_to_measure
 
 
-class MaiSDT:
-    """A class that represents one sdt chart. Only contains notes,
-    and does not include information such as song name,
-    chart difficulty, composer, chart maker, etc.
+class MaiSdt:
+    """A class that represents an sdt (and predecessors) chart.
+    Only contains notes, and does not include information
+    such as song name, chart difficulty, composer, chart maker, etc.
     It only contains enough information to build a working sdt
     chart file.
 
     Attributes:
+        bpm: Singular BPM in which the chart is written in.
         notes: Contains notes of the chart.
     """
 
@@ -28,7 +29,7 @@ class MaiSDT:
         self.slide_count = 1
 
     @classmethod
-    def open(cls, path: str, bpm: float, encoding: str = "utf-8") -> MaiSDT:
+    def open(cls, path: str, bpm: float, encoding: str = "utf-8") -> MaiSdt:
         sdt = cls(bpm=bpm)
         with open(path, "r", encoding=encoding) as file:
             for line in file:
@@ -200,7 +201,7 @@ class MaiSDT:
             Add a regular tap note at measure 1 at button 2,
             and a break tap note at measure 2 at button 7.
 
-            >>> sdt = MaiSDT()
+            >>> sdt = MaiSdt()
             >>> sdt.add_tap(1, 2)
             >>> sdt.add_tap(2, 7, is_break=True)
         """
@@ -219,7 +220,7 @@ class MaiSDT:
         Examples:
             Create a break tap note at measure 26.75 at button 4. Then delete it.
 
-            >>> sdt = MaiSDT()
+            >>> sdt = MaiSdt()
             >>> sdt.add_tap(26.75, 4, is_break=True)
             >>> sdt.del_tap(26.75, 4)
         """
@@ -245,7 +246,7 @@ class MaiSDT:
             Add a regular hold note at button 5 at measure 1.5, with
             duration of 2.75 measures.
 
-            >>> sdt = MaiSDT()
+            >>> sdt = MaiSdt()
             >>> sdt.add_hold(1.5, 5, 2.75)
         """
         hold_note = HoldNote(measure=measure, position=position, duration=duration)
@@ -263,7 +264,7 @@ class MaiSDT:
             Add a regular hold note at button 0 at measure 3.25 with duration of 2 measures
             and delete it.
 
-            >>> sdt = MaiSDT()
+            >>> sdt = MaiSdt()
             >>> sdt.add_hold(3.25, 0, 2)
             >>> sdt.del_hold(3.25, 0)
         """
@@ -305,7 +306,7 @@ class MaiSDT:
             duration of 1.75 measures, delay of 0.25 measures,
             pattern of 1.
 
-            >>> sdt = MaiSDT()
+            >>> sdt = MaiSdt()
             >>> sdt.add_slide(2, 6, 3, 1.75, 1)
         """
         slide_id = self.slide_count

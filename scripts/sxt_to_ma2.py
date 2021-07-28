@@ -3,7 +3,7 @@ import argparse
 import re
 import sys
 
-from maiconverter.maisdt import MaiSDT
+from maiconverter.maisdt import MaiSdt
 from maiconverter.converter import sdt_to_ma2
 
 
@@ -76,7 +76,7 @@ def main():
 
 
 def convert_sdt_file(input_path, output_dir, initial_bpm, delay):
-    sdt = MaiSDT()
+    sdt = MaiSdt()
 
     file_name = os.path.splitext(os.path.basename(input_path))[0]
     file_ext = ".ma2"

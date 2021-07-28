@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Union
 
 from ..maima2 import MaiMa2
-from ..maisdt import MaiSDT, TapNote, HoldNote, SlideStartNote, SlideEndNote
+from ..maisdt import MaiSdt, TapNote, HoldNote, SlideStartNote, SlideEndNote
 from ..event import NoteType
 
 
@@ -16,7 +16,7 @@ class StartSlide:
 
 
 def sdt_to_ma2(
-    sdt: MaiSDT,
+    sdt: MaiSdt,
     initial_bpm: float,
     click_res: int = 384,
     fes_mode: bool = False,

@@ -3,7 +3,7 @@ import copy
 
 from ..event import SimaiNote, MaiNote, NoteType
 from ..maisdt import (
-    MaiSDT,
+    MaiSdt,
     HoldNote as SDTHoldNote,
     SlideStartNote as SDTSlideStartNote,
 )
@@ -19,7 +19,7 @@ from ..simai import (
 
 
 def _default_touch_converter(
-    sdt: MaiSDT, touch_note: Union[TouchTapNote, TouchHoldNote]
+    sdt: MaiSdt, touch_note: Union[TouchTapNote, TouchHoldNote]
 ) -> None:
     if isinstance(touch_note, TouchTapNote) and touch_note.region == "C":
         sdt.add_tap(measure=touch_note.measure, position=0)
@@ -34,12 +34,12 @@ def _default_touch_converter(
 def simai_to_sdt(
     simai: SimaiChart,
     touch_converter: Callable[
-        [MaiSDT, Union[TouchHoldNote, TouchTapNote]], None
+        [MaiSdt, Union[TouchHoldNote, TouchTapNote]], None
     ] = _default_touch_converter,
     convert_touch: bool = False,
-) -> MaiSDT:
+) -> MaiSdt:
     initial_bpm = simai.get_bpm(1.0)
-    sdt = MaiSDT(initial_bpm)
+    sdt = MaiSdt(initial_bpm)
     convert_notes(sdt, simai.notes, touch_converter, convert_touch)
     sdt.notes.sort()
 
@@ -65,9 +65,9 @@ def simai_to_sdt(
 
 
 def convert_notes(
-    sdt: MaiSDT,
+    sdt: MaiSdt,
     simai_notes: List[SimaiNote],
-    touch_converter: Callable[[MaiSDT, Union[TouchHoldNote, TouchTapNote]], None],
+    touch_converter: Callable[[MaiSdt, Union[TouchHoldNote, TouchTapNote]], None],
     convert_touch: bool,
 ) -> None:
     skipped_notes = 0

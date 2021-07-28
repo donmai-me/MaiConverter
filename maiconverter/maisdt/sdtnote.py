@@ -15,7 +15,7 @@ class TapNote(MaiNote):
         """Produces an sdt tap note.
 
         Note:
-            Please use MaiSDT class' add_tap method for adding
+            Please use MaiSdt class' add_tap method for adding
             tap notes.
 
         Args:
@@ -52,7 +52,7 @@ class SlideStartNote(MaiNote):
         """Produces an sdt slide start note.
 
         Note:
-            Please use MaiSDT class' add_slide method for adding
+            Please use MaiSdt class' add_slide method for adding
             slide start and slide end.
 
         Args:
@@ -95,7 +95,7 @@ class SlideEndNote(MaiNote):
         """Produces an sdt slide end note.
 
         Note:
-            Please use MaiSDT class' add_slide method for adding
+            Please use MaiSdt class' add_slide method for adding
             slide start and slide end.
 
         Args:
@@ -124,7 +124,7 @@ class HoldNote(MaiNote):
         """Produces an sdt hold note.
 
         Note:
-            Please use MaiSDT class' add_hold method for adding
+            Please use MaiSdt class' add_hold method for adding
             hold notes.
 
         Args:
