@@ -124,7 +124,7 @@ def chart_convert(args, output):
             elif args.command in ["sdttoma2", "sdttosimai"]:
                 handle_sdt(file, name, output, args)
             elif args.command in ["simaifiletoma2", "simaifiletosdt"]:
-                handle_simai_file(file, name, output, args)
+                handle_simai_file(file, output, args)
             else:
                 handle_simai_chart(file, name, output, args)
 
@@ -139,40 +139,40 @@ def handle_ma2(file, name, output_path, args):
         ma2.offset(args.delay)
 
     if args.command == "ma2tosdt":
-        sdt = ma2_to_sdt(ma2, convert_touch=args.convert_touch)
+        output = ma2_to_sdt(ma2, convert_touch=args.convert_touch)
         ext = ".sdt"
     else:
-        simai = ma2_to_simai(ma2)
+        output = ma2_to_simai(ma2)
         ext = ".txt"
 
     with open(
         os.path.join(output_path, name + ext), "w+", newline="\r\n", encoding="utf-8"
     ) as out:
-        if args.command == "ma2tosimai":
-            out.write(simai.export(max_den=args.max_divisor))
+        if isinstance(output, SimaiChart):
+            out.write(output.export(max_den=args.max_divisor))
         else:
-            out.write(sdt.export())
+            out.write(output.export())
 
 
 def handle_sdt(file, name, output_path, args):
-    sdt = MaiSDT.open(file, encoding=args.encoding)
+    sdt = MaiSDT.open(file, encoding=args.encoding, bpm=args.bpm)
     if len(args.delay) != 0:
         sdt.offset(args.delay)
 
     if args.command == "sdttoma2":
-        ma2 = sdt_to_ma2(sdt, initial_bpm=args.bpm, res=args.resolution)
+        output = sdt_to_ma2(sdt, initial_bpm=args.bpm, res=args.resolution)
         ext = ".ma2"
     else:
-        simai = sdt_to_simai(sdt, initial_bpm=args.bpm)
+        output = sdt_to_simai(sdt, initial_bpm=args.bpm)
         ext = ".txt"
 
     with open(
         os.path.join(output_path, name + ext), "w+", newline="\r\n", encoding="utf-8"
     ) as out:
-        if args.command == "sdttosimai":
-            out.write(simai.export(max_den=args.max_divisor))
+        if isinstance(output, SimaiChart):
+            out.write(output.export(max_den=args.max_divisor))
         else:
-            out.write(ma2.export())
+            out.write(output.export())
 
 
 def handle_simai_chart(file, name, output_path, args):
@@ -196,7 +196,7 @@ def handle_simai_chart(file, name, output_path, args):
         out.write(converted.export())
 
 
-def handle_simai_file(file, name, output_path, args):
+def handle_simai_file(file, output_path, args):
     title, charts = parse_file(file, encoding=args.encoding)
     for i, chart in enumerate(charts):
         diff, simai_chart = chart
@@ -245,9 +245,7 @@ def handle_file(input_path, output_dir, command, key):
         plain_text = finale_chart_decrypt(key, input_path)
         with open(
             os.path.join(output_dir, file_name + file_ext),
-            "x",
-            newline="\r\n",
-            encoding="utf-8",
+            "xb",
         ) as f:
             f.write(plain_text)
 
@@ -273,9 +271,7 @@ def handle_db(input_path, output_dir, command, key):
         plain_text = finale_db_decrypt(key, input_path)
         with open(
             os.path.join(output_dir, file_name + file_ext),
-            "x",
-            newline="\r\n",
-            encoding="utf-8",
+            "xb",
         ) as f:
             f.write(plain_text)
 

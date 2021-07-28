@@ -18,14 +18,18 @@ class MaiSDT:
         notes: Contains notes of the chart.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, bpm: float) -> None:
+        if bpm <= 0:
+            raise ValueError(f"BPM is not positive {bpm}")
+
+        self.bpm = bpm
         self.notes: List[Union[TapNote, HoldNote, SlideStartNote, SlideEndNote]] = []
         self.start_slide_notes: Dict[int, Dict[str, Union[int, float]]] = {}
         self.slide_count = 1
 
     @classmethod
-    def open(cls, path: str, encoding: str = "utf-8") -> MaiSDT:
-        sdt = cls()
+    def open(cls, path: str, bpm: float, encoding: str = "utf-8") -> MaiSDT:
+        sdt = cls(bpm=bpm)
         with open(path, "r", encoding=encoding) as file:
             for line in file:
                 if line in ["\n", "\r\n"]:
