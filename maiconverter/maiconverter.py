@@ -4,12 +4,7 @@ import re
 import traceback
 
 import maiconverter
-from maiconverter.maicrypt import (
-    finale_db_encrypt,
-    finale_db_decrypt,
-    finale_chart_encrypt,
-    finale_chart_decrypt,
-)
+from maiconverter.maicrypt import finale_file_encrypt, finale_file_decrypt
 from maiconverter.maima2 import MaiMa2
 from maiconverter.maisdt import MaiSdt
 from maiconverter.simai import parse_file, SimaiChart
@@ -129,7 +124,7 @@ def chart_convert(args, output):
                 handle_simai_chart(file, name, output, args)
 
         except Exception as e:
-            print(f"Error occured processing {file}. {e}")
+            print(f"Error occurred processing {file}. {e}")
             traceback.print_exc()
 
 
@@ -236,7 +231,7 @@ def handle_file(input_path, output_dir, command, key):
             print("File {} exists! Skipping".format(file_name + file_ext))
             return
 
-        cipher_text = finale_chart_encrypt(key, input_path)
+        cipher_text = finale_file_encrypt(key, input_path)
         with open(os.path.join(output_dir, file_name + file_ext), "xb") as f:
             f.write(cipher_text)
     else:
@@ -245,7 +240,7 @@ def handle_file(input_path, output_dir, command, key):
             print("File {} exists! Skipping".format(file_name + file_ext))
             return
 
-        plain_text = finale_chart_decrypt(key, input_path)
+        plain_text = finale_file_decrypt(key, input_path)
         with open(
             os.path.join(output_dir, file_name + file_ext),
             "xb",
@@ -261,7 +256,7 @@ def handle_db(input_path, output_dir, command, key):
             print("File {} exists! Skipping".format(file_name + file_ext))
             return
 
-        cipher_text = finale_db_encrypt(key, input_path)
+        cipher_text = finale_file_encrypt(key, input_path)
         with open(os.path.join(output_dir, file_name + file_ext), "xb") as f:
             f.write(cipher_text)
     else:
@@ -271,7 +266,7 @@ def handle_db(input_path, output_dir, command, key):
             print("File {} exists! Skipping".format(file_name + file_ext))
             return
 
-        plain_text = finale_db_decrypt(key, input_path)
+        plain_text = finale_file_decrypt(key, input_path)
         with open(
             os.path.join(output_dir, file_name + file_ext),
             "xb",
