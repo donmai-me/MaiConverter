@@ -1,5 +1,5 @@
 import math
-from typing import List, Tuple
+from typing import List, Tuple, Union, Callable
 
 
 def _check_bpms(bpms: List[Tuple[float, float]]):
@@ -68,6 +68,25 @@ def second_to_measure(seconds: float, bpms: List[Tuple[float, float]]) -> float:
     gap_measure = gap_time * previous_bpm / (60 * 4)
 
     return previous_measure + gap_measure
+
+
+def offset_arg_to_measure(
+    offset: Union[float, str], sec_to_measure: Callable[[float], float]
+) -> float:
+    if isinstance(offset, float):
+        offset = offset
+    elif isinstance(offset, str) and offset[-1].lower() == "s":
+        offset = sec_to_measure(float(offset[:-1]))
+    elif isinstance(offset, str) and "/" in offset:
+        fraction = offset.split("/")
+        if len(fraction) != 2:
+            raise ValueError(f"Invalid fraction: {offset}")
+
+        offset = int(fraction[0]) / int(fraction[1])
+    else:
+        offset = float(offset)
+
+    return offset
 
 
 def quantise(measure: float, grid: int) -> float:

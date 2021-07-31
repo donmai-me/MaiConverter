@@ -1,5 +1,5 @@
 import math
-from typing import Tuple, Union
+from typing import Tuple
 
 from ..event import MaiNote, NoteType, Event, EventType
 
@@ -63,27 +63,44 @@ class SlideNote(MaiNote):
                       measures.
             delay: Time duration of when the slide appears and when it
                    starts to move, in terms of measures.
-            resolution: Ma2 time resolution used. Optional, defaults to
-                        384.
         Raises:
             ValueError: When pattern or duration is not a positive integer,
                         and when delay, or end_position are negative.
         """
         if pattern <= 0:
-            raise ValueError("Slide pattern is not positive " + str(pattern))
+            raise ValueError(f"Slide pattern is not positive {pattern}")
         if duration <= 0:
-            raise ValueError("Slide duration is not positive " + str(duration))
+            raise ValueError(f"Slide duration is not positive {duration}")
         if delay < 0:
-            raise ValueError("Slide delay is negative " + str(delay))
+            raise ValueError(f"Slide delay is negative {delay}")
         if end_position < 0:
-            raise ValueError("Slide end position is negative " + str(end_position))
+            raise ValueError(f"Slide end position is negative {end_position}")
 
-        measure = round(10000.0 * measure) / 10000.0
         super().__init__(measure, start_position, NoteType.complete_slide)
         self.end_position = end_position
         self.pattern = pattern
         self.delay = delay
         self.duration = duration
+
+    def to_str(self, resolution: int = 384) -> str:
+        measure = measure_to_ma2_time(self.measure, resolution)
+        template = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n"
+        inv_slide_dict = {v: k for k, v in slide_dict.items()}
+        if self.pattern not in inv_slide_dict:
+            raise ValueError(f"Unknown slide pattern {self.pattern}")
+
+        pattern = inv_slide_dict[self.pattern]
+        delay = round(self.delay * resolution)
+        duration = round(self.duration * resolution)
+        return template.format(
+            pattern,
+            measure[0],
+            measure[1],
+            self.position,
+            delay,
+            duration,
+            self.end_position,
+        )
 
 
 class HoldNote(MaiNote):
@@ -104,8 +121,6 @@ class HoldNote(MaiNote):
             position: Button where the hold note happens.
             duration: Total time duration of the hold note.
             is_ex: Whether a hold note is an ex note.
-            resolution: Ma2 time resolution used. Optional, defaults to
-                        384.
 
         Raises:
             ValueError: When duration is not positive.
@@ -113,15 +128,18 @@ class HoldNote(MaiNote):
         if duration < 0:
             raise ValueError(f"Hold duration is negative: {duration}")
 
-        measure = round(measure * 10000.0) / 10000.0
-        duration = round(duration * 10000.0) / 10000.0
-
         if is_ex:
             super().__init__(measure, position, NoteType.ex_hold)
         else:
             super().__init__(measure, position, NoteType.hold)
 
         self.duration = duration
+
+    def to_str(self, resolution: int) -> str:
+        measure = measure_to_ma2_time(self.measure, resolution)
+        template = "HLD\t{}\t{}\t{}\t{}\n"
+        duration = round(self.duration * resolution)
+        return template.format(measure[0], measure[1], self.position, duration)
 
 
 class TapNote(MaiNote):
@@ -144,10 +162,7 @@ class TapNote(MaiNote):
             is_star: Whether a tap note is a star note.
             is_break: Whether a tap note is a break note.
             is_ex: Whether a tap note is an ex note.
-            resolution: Ma2 time resolution used. Optional, defaults to
-                        384.
         """
-        measure = round(measure * 10000.0) / 10000.0
 
         if is_ex and is_star:
             super().__init__(measure, position, NoteType.ex_star)
@@ -161,6 +176,16 @@ class TapNote(MaiNote):
             super().__init__(measure, position, NoteType.break_tap)
         elif not is_star and not is_break:
             super().__init__(measure, position, NoteType.tap)
+
+    def to_str(self, resolution: int) -> str:
+        measure = measure_to_ma2_time(self.measure, resolution)
+        template = "{}\t{}\t{}\t{}\n"
+        inv_note_dict = {v: k for k, v in note_dict.items()}
+        if self.note_type.value not in inv_note_dict:
+            raise ValueError(f"Unknown tap note {self.note_type.value}")
+
+        name = inv_note_dict[self.note_type.value]
+        return template.format(name, measure[0], measure[1], self.position)
 
 
 class TouchTapNote(MaiNote):
@@ -190,21 +215,32 @@ class TouchTapNote(MaiNote):
             A touch tap note at E0 at measure 2.25, produces no
             fireworks.
 
-            >>> touch_tap = MaiMa2TouchTapNote(2.25, 0, "E")
+            >>> touch_tap = TouchTapNote(2.25, 0, "E")
 
             A touch tap note at B5 at measure 5.00, produces fireworks.
 
-            >>> touch_tap = MaiMa2TouchTapNote(5.00, 5, "B", True)
+            >>> touch_tap = TouchTapNote(5.00, 5, "B", True)
         """
         if size not in ["M1", "L1"]:
             raise ValueError(f"Invalid size given: {size}")
-
-        measure = round(measure * 10000.0) / 10000.0
 
         super().__init__(measure, position, NoteType.touch_tap)
         self.is_firework = is_firework
         self.region = region
         self.size = size
+
+    def to_str(self, resolution: int) -> str:
+        measure = measure_to_ma2_time(self.measure, resolution)
+        template = "TTP\t{}\t{}\t{}\t{}\t{}\t{}\n"
+        fireworks = 1 if self.is_firework else 0
+        return template.format(
+            measure[0],
+            measure[1],
+            self.position,
+            self.region,
+            fireworks,
+            self.size,
+        )
 
 
 class TouchHoldNote(MaiNote):
@@ -236,14 +272,13 @@ class TouchHoldNote(MaiNote):
             A touch hold note at C0 at measure 1 with duration of
             1.5 measures, produces no fireworks.
 
-            >>> touch_tap = MaiMa2TouchHoldNote(1, 0, "C", 1.5)
+            >>> touch_tap = TouchHoldNote(1, 0, "C", 1.5)
         """
         if duration <= 0:
             raise ValueError(f"Hold duration is not positive: {duration} ")
         if size not in ["M1", "L1"]:
             raise ValueError(f"Invalid size given: {size}")
 
-        measure = round(measure * 10000.0) / 10000.0
         duration = round(duration * 10000.0) / 10000.0
 
         super().__init__(measure, position, NoteType.touch_hold)
@@ -251,6 +286,23 @@ class TouchHoldNote(MaiNote):
         self.is_firework = is_firework
         self.region = region
         self.size = size
+
+    def to_str(self, resolution: int) -> str:
+        measure = measure_to_ma2_time(self.measure, resolution)
+        template = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n"
+        name = "THO"
+        duration = round(self.duration * resolution)
+        fireworks = 1 if self.is_firework else 0
+        return template.format(
+            name,
+            measure[0],
+            measure[1],
+            self.position,
+            duration,
+            self.region,
+            fireworks,
+            self.size,
+        )
 
 
 class BPM(Event):
@@ -265,8 +317,6 @@ class BPM(Event):
             measure: Time when the BPM change happens,
                      in terms of measures.
             bpm: The tempo in beats per minute.
-            resolution: Ma2 time resolution used. Optional, defaults to
-                        384.
 
         Raises:
             ValueError: When bpm is not positive.
@@ -274,15 +324,18 @@ class BPM(Event):
         Examples:
             A bpm of 220 at measure 3.
 
-            >>> ma2_bpm = MaiMa2BPM(3, 220)
+            >>> ma2_bpm = BPM(3, 220)
         """
         if bpm <= 0:
             raise ValueError(f"BPM is not positive: {bpm}")
 
-        measure = round(measure * 10000.0) / 10000.0
-
         super().__init__(measure, EventType.bpm)
         self.bpm = bpm
+
+    def to_str(self, resolution: int) -> str:
+        measure = measure_to_ma2_time(self.measure, resolution)
+        template = "BPM\t{}\t{}\t{:.3f}\n"
+        return template.format(measure[0], measure[1], self.bpm)
 
 
 class Meter(Event):
@@ -305,8 +358,6 @@ class Meter(Event):
                              signature.
             meter_denominator: The lower numeral in a meter/time
                              signature.
-            resolution: Ma2 time resolution used. Optional, defaults to
-                        384.
 
         Raises:
             ValueError: When meter_numerator or
@@ -317,14 +368,17 @@ class Meter(Event):
         if meter_denominator <= 0:
             raise ValueError(f"Meter denominator is not positive {meter_denominator}")
 
-        measure = round(measure * 10000.0) / 10000.0
-
         super().__init__(measure, EventType.meter)
         self.numerator = meter_numerator
         self.denominator = meter_denominator
 
+    def to_str(self, resolution: int) -> str:
+        measure = measure_to_ma2_time(self.measure, resolution)
+        template = "MET\t{}\t{}\t{}\t{}\n"
+        return template.format(measure[0], measure[1], self.numerator, self.denominator)
 
-def measure_to_ma2_time(measure: float, resolution: int = 384) -> Tuple[int, int]:
+
+def measure_to_ma2_time(measure: float, resolution: int) -> Tuple[int, int]:
     """Convert measure in decimal form to ma2's format.
 
     Ma2 uses integer timing for its measures. It does so by taking
@@ -335,6 +389,7 @@ def measure_to_ma2_time(measure: float, resolution: int = 384) -> Tuple[int, int
 
     Args:
         measure: The time a note happened or duration.
+        resolution: The number of ticks equal to one measure.
 
     Returns:
         A tuple (WHOLE_PART, FRACTIONAL_PART).
@@ -363,95 +418,4 @@ def measure_to_ma2_time(measure: float, resolution: int = 384) -> Tuple[int, int
     (decimal_part, whole_part) = math.modf(measure)
     decimal_part = round(decimal_part * resolution)
 
-    return (int(whole_part), decimal_part)
-
-
-def event_to_str(
-    event: Union[TapNote, HoldNote, SlideNote, TouchTapNote, TouchHoldNote, BPM, Meter],
-    resolution: int = 384,
-) -> str:
-    """Converts ma2 note and events into ma2-compatible lines.
-
-    Args:
-        event: A bpm, meter, or note event.
-
-    Returns:
-        A single line string with a line ending.
-
-    Raises:
-        TypeError: If a note or event is unknown.
-        ValueError: If a slide note has unknown pattern.
-    """
-    if not isinstance(event, Event):
-        raise TypeError("{} is not an Event type".format(event))
-
-    inv_note_dict = {v: k for k, v in note_dict.items()}
-    measure = measure_to_ma2_time(event.measure, resolution)
-
-    if isinstance(event, BPM):  # BPM
-        template = "BPM\t{}\t{}\t{:.3f}\n"
-        result = template.format(measure[0], measure[1], event.bpm)
-    elif isinstance(event, Meter):  # Meter
-        template = "MET\t{}\t{}\t{}\t{}\n"
-        result = template.format(
-            measure[0], measure[1], event.numerator, event.denominator
-        )
-    elif isinstance(event, TapNote):
-        template = "{}\t{}\t{}\t{}\n"
-        name = inv_note_dict[event.note_type.value]
-        result = template.format(name, measure[0], measure[1], event.position)
-    elif isinstance(event, HoldNote):
-        template = "{}\t{}\t{}\t{}\t{}\n"
-        name = inv_note_dict[event.note_type.value]
-        duration = round(event.duration * resolution)
-        result = template.format(name, measure[0], measure[1], event.position, duration)
-    elif isinstance(event, SlideNote):
-        template = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n"
-        inv_slide_dict = {v: k for k, v in slide_dict.items()}
-        if event.pattern not in inv_slide_dict:
-            raise ValueError("Unknown slide pattern {}".format(event.pattern))
-
-        pattern = inv_slide_dict[event.pattern]
-        delay = round(event.delay * resolution)
-        duration = round(event.duration * resolution)
-        result = template.format(
-            pattern,
-            measure[0],
-            measure[1],
-            event.position,
-            delay,
-            duration,
-            event.end_position,
-        )
-    elif isinstance(event, TouchTapNote):
-        template = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n"
-        name = inv_note_dict[event.note_type.value]
-        fireworks = 1 if event.is_firework else 0
-        result = template.format(
-            name,
-            measure[0],
-            measure[1],
-            event.position,
-            event.region,
-            fireworks,
-            event.size,
-        )
-    elif isinstance(event, TouchHoldNote):
-        template = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n"
-        name = inv_note_dict[event.note_type.value]
-        duration = round(event.duration * resolution)
-        fireworks = 1 if event.is_firework else 0
-        result = template.format(
-            name,
-            measure[0],
-            measure[1],
-            event.position,
-            duration,
-            event.region,
-            fireworks,
-            event.size,
-        )
-    else:
-        raise TypeError("Unknown note type {}".format(event.note_type.value))
-
-    return result
+    return int(whole_part), decimal_part

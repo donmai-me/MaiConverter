@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import math
 from typing import Optional, Tuple, List, Union
-import copy
 from lark import Lark
 
 from .tools import (
@@ -17,7 +16,7 @@ from .simai_parser import SimaiTransformer
 
 # I hate the simai format can we use bmson or stepmania chart format for
 # community-made charts instead
-from ..tool import measure_to_second, second_to_measure
+from ..tool import measure_to_second, second_to_measure, offset_arg_to_measure
 
 
 class SimaiChart:
@@ -473,6 +472,7 @@ class SimaiChart:
             In a chart, the initial bpm is 180 then changes
             to 250 in measure 12.
 
+            >>> simai = SimaiChart()
             >>> simai.get_bpm(0)
             180.0
             >>> simai.get_bpm(11.99)
@@ -487,11 +487,11 @@ class SimaiChart:
 
         bpm_measures = [bpm.measure for bpm in self.bpms]
         bpm_measures = list(set(bpm_measures))
-        bpm_measures.sort()
 
-        if 0.0 not in bpm_measures and 1.0 not in bpm_measures:
+        if not any([x for x in bpm_measures if 0.0 <= x <= 1.0]):
             raise ValueError("No starting BPMs defined")
 
+        bpm_measures.sort()
         previous_measure = 0
         for bpm_measure in bpm_measures:
             if bpm_measure <= measure:
@@ -514,37 +514,26 @@ class SimaiChart:
         Examples:
             Delete the BPM change defined at measure 24.
 
+            >>> simai = SimaiChart()
             >>> simai.del_bpm(24)
         """
-        bpms = [x for x in self.bpms if x.measure == measure]
+        bpms = [
+            x for x in self.bpms if math.isclose(x.measure, measure, abs_tol=0.0001)
+        ]
         for x in bpms:
             self.bpms.remove(x)
 
     def offset(self, offset: Union[float, str]) -> None:
-        if isinstance(offset, float):
-            offset = offset
-        elif isinstance(offset, str) and offset[-1].lower() == "s":
-            offset = self.second_to_measure(float(offset[:-1]))
-        elif isinstance(offset, str) and "/" in offset:
-            fraction = offset.split("/")
-            if len(fraction) != 2:
-                raise ValueError(f"Invalid fraction: {offset}")
-
-            offset = int(fraction[0]) / int(fraction[1])
-        else:
-            offset = float(offset)
+        offset = offset_arg_to_measure(offset, self.second_to_measure)
 
         for note in self.notes:
-            note.measure = round((note.measure + offset) * 10000.0) / 10000.0
+            note.measure = round(note.measure + offset, 4)
 
-        new_bpms = copy.deepcopy(self.bpms)
-        for event in new_bpms:
-            if event.measure <= 1.0:
+        for bpm in self.bpms:
+            if bpm.measure == 0:
                 continue
 
-            event.measure = round((event.measure + offset) * 10000.0) / 10000.0
-
-        self.bpms = new_bpms
+            bpm.measure = round(bpm.measure + offset, 4)
 
     def measure_to_second(self, measure: float) -> float:
         bpms = [(bpm.measure, bpm.bpm) for bpm in self.bpms]

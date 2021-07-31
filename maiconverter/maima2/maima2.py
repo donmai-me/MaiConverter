@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import math
 from typing import Tuple, List, Union
-import copy
 
 from .ma2note import (
     TapNote,
@@ -12,11 +11,10 @@ from .ma2note import (
     TouchHoldNote,
     BPM,
     Meter,
-    event_to_str,
 )
 from .tools import parse_v1
 from ..event import NoteType
-from ..tool import second_to_measure, measure_to_second
+from ..tool import second_to_measure, measure_to_second, offset_arg_to_measure
 
 # Latest chart version
 MA2_VERSION = "1.03.00"
@@ -172,11 +170,11 @@ class MaiMa2:
 
         bpm_measures = [bpm.measure for bpm in self.bpms]
         bpm_measures = list(set(bpm_measures))
+
+        if not any([x for x in bpm_measures if 0.0 <= x <= 1.0]):
+            raise ValueError("No starting BPM defined")
+
         bpm_measures.sort()
-
-        if 0.0 not in bpm_measures and 1.0 not in bpm_measures:
-            raise RuntimeError("No starting BPM defined")
-
         previous_measure = 0.0
         for bpm_measure in bpm_measures:
             if bpm_measure <= measure:
@@ -249,11 +247,6 @@ class MaiMa2:
             (4, 4)
             >>> ma2.get_meter(12)
             (6, 8)
-
-            In a blank chart.
-
-            >>> print(ma2.get_meter(0))
-            None
         """
         if len(self.meters) == 0:
             raise ValueError("No meters defined")
@@ -262,11 +255,11 @@ class MaiMa2:
 
         meter_measures = [meter.measure for meter in self.meters]
         meter_measures = list(set(meter_measures))
-        meter_measures.sort()
 
-        if 0.0 not in meter_measures and 1.0 not in meter_measures:
+        if not any([x for x in meter_measures if 0.0 <= x <= 1.0]):
             raise ValueError("No starting meters defined")
 
+        meter_measures.sort()
         previous_measure = 0.0
         for meter_measure in meter_measures:
             if meter_measure <= measure:
@@ -281,192 +274,6 @@ class MaiMa2:
         ]
 
         return meter_result[0].numerator, meter_result[0].denominator
-
-    def get_bpm_statistic(self) -> Tuple[float, float, float, float]:
-        """Reads all the BPM defined and provides statistics.
-
-        Returns:
-            A tuple of floats representing BPMs:
-             (STARTING, MODE, HIGHEST, LOWEST)
-
-        Raises:
-            Exception: If there are no BPM events defined.
-        """
-        self.notes.sort()
-        last_measure = self.notes[-1].measure
-        measure_list = [bpm.measure for bpm in self.bpms]
-        if len(measure_list) == 0:
-            raise Exception("No BPMs defined.")
-
-        measure_list.sort()
-        bpm_list = [bpm.bpm for bpm in self.bpms]
-        try:
-            starting_bpm = self.get_bpm(0.0)
-        except RuntimeError:
-            starting_bpm = self.get_bpm(1.0)
-
-        mode_bpm = starting_bpm
-        highest_bpm = max(bpm_list)
-        lowest_bpm = min(bpm_list)
-        bpm_duration = {starting_bpm: 0.0}
-
-        for i, _ in enumerate(measure_list):
-            bpm = bpm_list[i]
-            if i == len(measure_list) - 1:
-                duration = last_measure - measure_list[i]
-            else:
-                duration = measure_list[i + 1] - measure_list[i]
-
-            if bpm in bpm_duration:
-                bpm_duration[bpm] += duration
-            else:
-                bpm_duration[bpm] = duration
-
-            if bpm_duration[bpm] > bpm_duration[mode_bpm]:
-                mode_bpm = bpm
-
-        return starting_bpm, mode_bpm, highest_bpm, lowest_bpm
-
-    def get_header(self) -> str:
-        """Generates a 7 line header required in ma2 formats.
-
-        If there are no defined meter events, it is assumed that the
-        meter is 4/4.
-
-        Returns:
-            A multiline string.
-        """
-        bpms = self.get_bpm_statistic()
-        try:
-            starting_meter = self.get_meter(0.0)
-        except ValueError:
-            try:
-                starting_meter = self.get_meter(1.0)
-            except ValueError:
-                print("Warning: No starting meter. Assuming 4/4")
-                meter_num = 4
-                meter_den = 4
-            else:
-                meter_num = starting_meter[0]
-                meter_den = starting_meter[1]
-        else:
-            meter_num = starting_meter[0]
-            meter_den = starting_meter[1]
-
-        result = f"VERSION\t0.00.00\t{MA2_VERSION}\n"
-        result += f"FES_MODE\t{1 if self.fes_mode else 0}\n"
-        result += (
-            f"BPM_DEF\t{bpms[0]:.3f}\t{bpms[1]:.3f}\t{bpms[2]:.3f}\t{bpms[3]:.3f}\n"
-        )
-        result += f"MET_DEF\t{meter_num}\t{meter_den}\n"
-        result += f"RESOLUTION\t{self.resolution}\n"
-        result += f"CLK_DEF\t{self.click_res}\n"
-        result += "COMPATIBLE_CODE\tMA2\n"
-
-        return result
-
-    def get_breakdown(self) -> str:
-        """Prints all BPM and MET events in chronological order.
-
-        Returns:
-            A multiline string. Each line
-            contains information about every BPM and Meter events
-            defined.
-        """
-        bpms = self.bpms
-        bpms.sort(key=lambda bpm: bpm.measure)
-        meters = self.meters
-        meters.sort(key=lambda meter: meter.measure)
-
-        result = ""
-        for bpm in bpms:
-            result += event_to_str(bpm)
-
-        for meter in meters:
-            result += event_to_str(meter)
-
-        return result
-
-    def get_epilog(self) -> str:
-        """Prints summary of all notes and score information.
-
-        Returns:
-            A multiline string.
-            First part gives the total number of notes are in
-            the chart. Second part is about score related information.
-
-        """
-        result = ""
-        total_notes = 0
-        for note_type in self.notes_stat:
-            total_notes += self.notes_stat[note_type]
-            result += "T_REC_{}\t{}\n".format(note_type, self.notes_stat[note_type])
-        result += "T_REC_ALL\t{}\n".format(total_notes)
-
-        num_taps = sum(
-            [self.notes_stat[i] for i in ["TAP", "XTP", "STR", "XST", "TTP"]]
-        )
-        num_breaks = self.notes_stat["BRK"] + self.notes_stat["BST"]
-        num_holds = sum([self.notes_stat[i] for i in ["HLD", "XHO", "THO"]])
-        num_slides = self.notes_stat["SLD"]
-
-        result += "T_NUM_TAP\t{}\n".format(num_taps)
-        result += "T_NUM_BRK\t{}\n".format(num_breaks)
-        result += "T_NUM_HLD\t{}\n".format(num_holds)
-        result += "T_NUM_SLD\t{}\n".format(num_slides)
-        result += "T_NUM_ALL\t{}\n".format(total_notes)
-
-        judge_taps = num_taps + num_breaks
-        judge_holds = round(num_holds * 1.75)
-        judge_all = judge_taps + judge_holds + num_slides
-        result += "T_JUDGE_TAP\t{}\n".format(judge_taps)
-        result += "T_JUDGE_HLD\t{}\n".format(judge_holds)
-        result += "T_JUDGE_SLD\t{}\n".format(num_slides)
-        result += "T_JUDGE_ALL\t{}\n".format(judge_all)
-
-        taps = [
-            note.measure
-            for note in self.notes
-            if isinstance(note, (TapNote, HoldNote, TouchTapNote, TouchHoldNote))
-        ]
-        measures = set(taps)
-        num_eachpairs = 0
-
-        for measure in measures:
-            if taps.count(measure) > 1:
-                num_eachpairs += 1
-
-        result += "TTM_EACHPAIRS\t{}\n".format(num_eachpairs)
-
-        # From https://docs.google.com/document/d/1gQlxtxOj-E3H2SClJH5PNxLnG6eBufDFrw2yLsffbp0
-        total_max_score_tap = 500 * num_taps
-        total_max_score_break = 2600 * num_breaks
-        total_max_score_hold = 1000 * num_holds
-        total_max_score_slide = 1500 * num_slides
-        total_max_score = (
-            total_max_score_tap
-            + total_max_score_break
-            + total_max_score_hold
-            + total_max_score_slide
-        )
-        result += "TTM_SCR_TAP\t{}\n".format(total_max_score_tap)
-        result += "TTM_SCR_BRK\t{}\n".format(total_max_score_break)
-        result += "TTM_SCR_HLD\t{}\n".format(total_max_score_hold)
-        result += "TTM_SCR_SLD\t{}\n".format(total_max_score_slide)
-        result += "TTM_SCR_ALL\t{}\n".format(total_max_score)
-        total_base_score = (
-            total_max_score_tap
-            + total_max_score_hold
-            + total_max_score_slide
-            + 2500 * num_breaks
-        )
-        max_finale_achievement = int(10000 * total_max_score / total_base_score)
-        total_max_score_s = round(0.97 * total_base_score / 100) * 100
-        total_max_score_ss = total_base_score
-        result += "TTM_SCR_S\t{}\n".format(total_max_score_s)
-        result += "TTM_SCR_SS\t{}\n".format(total_max_score_ss)
-        result += "TTM_RAT_ACV\t{}\n".format(max_finale_achievement)
-        return result
 
     def add_tap(
         self,
@@ -782,38 +589,22 @@ class MaiMa2:
             self.notes_stat["THO"] -= 1
 
     def offset(self, offset: Union[float, str]) -> None:
-        if isinstance(offset, float):
-            offset = offset
-        elif isinstance(offset, str) and offset[-1].lower() == "s":
-            offset = self.second_to_measure(float(offset[:-1]))
-        elif isinstance(offset, str) and "/" in offset:
-            fraction = offset.split("/")
-            if len(fraction) != 2:
-                raise ValueError(f"Invalid fraction: {offset}")
-
-            offset = int(fraction[0]) / int(fraction[1])
-        else:
-            offset = float(offset)
+        offset = offset_arg_to_measure(offset, self.second_to_measure)
 
         for note in self.notes:
-            note.measure = round((note.measure + offset) * 10000.0) / 10000.0
+            note.measure = round(note.measure + offset, 4)
 
-        new_bpms = copy.deepcopy(self.bpms)
-        for event in new_bpms:
-            if event.measure <= 1.0:
+        for bpm in self.bpms:
+            if bpm.measure == 0:
                 continue
 
-            event.measure = round((event.measure + offset) * 10000.0) / 10000.0
+            bpm.measure = round(bpm.measure + offset, 4)
 
-        new_meters = copy.deepcopy(self.meters)
-        for meter in new_meters:
-            if meter.measure <= 1.0:
+        for meter in self.meters:
+            if meter.measure == 0:
                 continue
 
-            meter.measure = round((meter.measure + offset) * 10000.0) / 10000.0
-
-        self.bpms = new_bpms
-        self.meters = new_meters
+            meter.measure = round(meter.measure + offset, 4)
 
     def measure_to_second(self, measure: float) -> float:
         bpms = [(bpm.measure, bpm.bpm) for bpm in self.bpms]
@@ -825,6 +616,192 @@ class MaiMa2:
 
         return second_to_measure(seconds, bpms)
 
+    def get_bpm_statistic(self) -> Tuple[float, float, float, float]:
+        """Reads all the BPM defined and provides statistics.
+
+        Returns:
+            A tuple of floats representing BPMs:
+             (STARTING, MODE, HIGHEST, LOWEST)
+
+        Raises:
+            Exception: If there are no BPM events defined.
+        """
+        self.notes.sort()
+        last_measure = self.notes[-1].measure
+        measure_list = [bpm.measure for bpm in self.bpms]
+        if len(measure_list) == 0:
+            raise Exception("No BPMs defined.")
+
+        measure_list.sort()
+        bpm_list = [bpm.bpm for bpm in self.bpms]
+        try:
+            starting_bpm = self.get_bpm(0.0)
+        except RuntimeError:
+            starting_bpm = self.get_bpm(1.0)
+
+        mode_bpm = starting_bpm
+        highest_bpm = max(bpm_list)
+        lowest_bpm = min(bpm_list)
+        bpm_duration = {starting_bpm: 0.0}
+
+        for i, _ in enumerate(measure_list):
+            bpm = bpm_list[i]
+            if i == len(measure_list) - 1:
+                duration = last_measure - measure_list[i]
+            else:
+                duration = measure_list[i + 1] - measure_list[i]
+
+            if bpm in bpm_duration:
+                bpm_duration[bpm] += duration
+            else:
+                bpm_duration[bpm] = duration
+
+            if bpm_duration[bpm] > bpm_duration[mode_bpm]:
+                mode_bpm = bpm
+
+        return starting_bpm, mode_bpm, highest_bpm, lowest_bpm
+
+    def get_header(self, resolution: int) -> str:
+        """Generates a 7 line header required in ma2 formats.
+
+        If there are no defined meter events, it is assumed that the
+        meter is 4/4.
+
+        Returns:
+            A multiline string.
+        """
+        bpms = self.get_bpm_statistic()
+        try:
+            starting_meter = self.get_meter(0.0)
+        except ValueError:
+            try:
+                starting_meter = self.get_meter(1.0)
+            except ValueError:
+                print("Warning: No starting meter. Assuming 4/4")
+                meter_num = 4
+                meter_den = 4
+            else:
+                meter_num = starting_meter[0]
+                meter_den = starting_meter[1]
+        else:
+            meter_num = starting_meter[0]
+            meter_den = starting_meter[1]
+
+        result = f"VERSION\t0.00.00\t{MA2_VERSION}\n"
+        result += f"FES_MODE\t{1 if self.fes_mode else 0}\n"
+        result += (
+            f"BPM_DEF\t{bpms[0]:.3f}\t{bpms[1]:.3f}\t{bpms[2]:.3f}\t{bpms[3]:.3f}\n"
+        )
+        result += f"MET_DEF\t{meter_num}\t{meter_den}\n"
+        result += f"RESOLUTION\t{resolution}\n"
+        result += f"CLK_DEF\t{self.click_res}\n"
+        result += "COMPATIBLE_CODE\tMA2\n"
+
+        return result
+
+    def get_breakdown(self, resolution: int) -> str:
+        """Prints all BPM and MET events in chronological order.
+
+        Returns:
+            A multiline string. Each line
+            contains information about every BPM and Meter events
+            defined.
+        """
+        bpms = self.bpms
+        bpms.sort(key=lambda x: x.measure)
+        meters = self.meters
+        meters.sort(key=lambda x: x.measure)
+
+        result = ""
+        for bpm in bpms:
+            result += bpm.to_str(resolution=resolution)
+
+        for meter in meters:
+            result += meter.to_str(resolution=resolution)
+
+        return result
+
+    def get_epilog(self) -> str:
+        """Prints summary of all notes and score information.
+
+        Returns:
+            A multiline string.
+            First part gives the total number of notes are in
+            the chart. Second part is about score related information.
+
+        """
+        result = ""
+        total_notes = 0
+        for note_type in self.notes_stat:
+            total_notes += self.notes_stat[note_type]
+            result += "T_REC_{}\t{}\n".format(note_type, self.notes_stat[note_type])
+        result += "T_REC_ALL\t{}\n".format(total_notes)
+
+        num_taps = sum(
+            [self.notes_stat[i] for i in ["TAP", "XTP", "STR", "XST", "TTP"]]
+        )
+        num_breaks = self.notes_stat["BRK"] + self.notes_stat["BST"]
+        num_holds = sum([self.notes_stat[i] for i in ["HLD", "XHO", "THO"]])
+        num_slides = self.notes_stat["SLD"]
+
+        result += "T_NUM_TAP\t{}\n".format(num_taps)
+        result += "T_NUM_BRK\t{}\n".format(num_breaks)
+        result += "T_NUM_HLD\t{}\n".format(num_holds)
+        result += "T_NUM_SLD\t{}\n".format(num_slides)
+        result += "T_NUM_ALL\t{}\n".format(total_notes)
+
+        judge_taps = num_taps + num_breaks
+        judge_holds = round(num_holds * 1.75)
+        judge_all = judge_taps + judge_holds + num_slides
+        result += "T_JUDGE_TAP\t{}\n".format(judge_taps)
+        result += "T_JUDGE_HLD\t{}\n".format(judge_holds)
+        result += "T_JUDGE_SLD\t{}\n".format(num_slides)
+        result += "T_JUDGE_ALL\t{}\n".format(judge_all)
+
+        taps = [
+            note.measure
+            for note in self.notes
+            if isinstance(note, (TapNote, HoldNote, TouchTapNote, TouchHoldNote))
+        ]
+        measures = set(taps)
+        num_eachpairs = 0
+
+        for measure in measures:
+            if taps.count(measure) > 1:
+                num_eachpairs += 1
+
+        result += "TTM_EACHPAIRS\t{}\n".format(num_eachpairs)
+
+        # From https://docs.google.com/document/d/1gQlxtxOj-E3H2SClJH5PNxLnG6eBufDFrw2yLsffbp0
+        total_max_score_tap = 500 * num_taps
+        total_max_score_break = 2600 * num_breaks
+        total_max_score_hold = 1000 * num_holds
+        total_max_score_slide = 1500 * num_slides
+        total_max_score = (
+            total_max_score_tap
+            + total_max_score_break
+            + total_max_score_hold
+            + total_max_score_slide
+        )
+        result += "TTM_SCR_TAP\t{}\n".format(total_max_score_tap)
+        result += "TTM_SCR_BRK\t{}\n".format(total_max_score_break)
+        result += "TTM_SCR_HLD\t{}\n".format(total_max_score_hold)
+        result += "TTM_SCR_SLD\t{}\n".format(total_max_score_slide)
+        result += "TTM_SCR_ALL\t{}\n".format(total_max_score)
+        total_base_score = (
+            total_max_score_tap
+            + total_max_score_hold
+            + total_max_score_slide
+            + 2500 * num_breaks
+        )
+        max_finale_achievement = int(10000 * total_max_score / total_base_score)
+        total_max_score_s = round(0.97 * total_base_score / 100) * 100
+        total_max_score_ss = total_base_score
+        result += "TTM_SCR_S\t{}\n".format(total_max_score_s)
+        result += "TTM_SCR_SS\t{}\n".format(total_max_score_ss)
+        result += "TTM_RAT_ACV\t{}\n".format(max_finale_achievement)
+        return result
+
     def export(self, resolution: int = 384) -> str:
         """Generates a ma2 text from all the notes and events defined.
 
@@ -833,14 +810,14 @@ class MaiMa2:
             string is a complete and functioning ma2 text and should
             be stored as-is in a text file with a .ma2 file extension.
         """
-        result = self.get_header()
+        result = self.get_header(resolution=resolution)
         result += "\n"
-        result += self.get_breakdown()
+        result += self.get_breakdown(resolution=resolution)
         result += "\n"
 
         self.notes.sort()
         for note in self.notes:
-            result += event_to_str(event=note, resolution=resolution)
+            result += note.to_str(resolution=resolution)
 
         result += "\n"
         result += self.get_epilog()
