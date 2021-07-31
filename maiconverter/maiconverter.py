@@ -17,19 +17,6 @@ from maiconverter.converter import (
     simai_to_sdt,
 )
 
-COMMANDS = [
-    "encrypt",
-    "decrypt",
-    "ma2tosdt",
-    "ma2tosimai",
-    "sdttoma2",
-    "sdttosimai",
-    "simaifiletoma2",
-    "simaifiletosdt",
-    "simaitoma2",
-    "simaitosdt",
-]
-
 
 def file_path(string):
     if os.path.exists(string):
@@ -274,9 +261,22 @@ def handle_db(input_path, output_dir, command, key):
             f.write(plain_text)
 
 
-def main():
+def parse_arg():
+    COMMANDS = [
+        "encrypt",
+        "decrypt",
+        "ma2tosdt",
+        "ma2tosimai",
+        "sdttoma2",
+        "sdttosimai",
+        "simaifiletoma2",
+        "simaifiletosdt",
+        "simaitoma2",
+        "simaitosdt",
+    ]
+
     parser = argparse.ArgumentParser(
-        description="Tool for converting Maimai chart formats",
+        description="Tool for converting MaiMai chart formats",
         allow_abbrev=False,
     )
     parser.add_argument(
@@ -291,7 +291,7 @@ def main():
         "-k",
         "--key",
         type=str,
-        help="16 byte AES key for encrypt/decrypt (whitespace allowed)",
+        help="16 byte AES key for encrypt/decrypt (Prepend hex value with 0x)",
     )
     parser.add_argument(
         "--database",
@@ -353,13 +353,18 @@ def main():
         help="Specify encoding of source file. Defaults to utf-8",
     )
 
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def main():
+    args = parse_arg()
     print(f"MaiConverter {maiconverter.__version__} by donmai")
 
-    if args.output is None and os.path.isdir(args.path):
-        output_dir = os.path.join(args.path, "output")
-    elif args.output is None and not os.path.isdir(args.path):
-        output_dir = os.path.join(os.path.dirname(args.path), "output")
+    if args.output is None:
+        if os.path.isdir(args.path):
+            output_dir = os.path.join(args.path, "output")
+        else:
+            output_dir = os.path.join(os.path.dirname(args.path), "output")
     else:
         output_dir = args.output
 

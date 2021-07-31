@@ -1,6 +1,7 @@
 from __future__ import annotations
+
 import re
-from typing import Union, List, Dict, Optional
+from typing import Union, List, Dict
 
 from .sdtnote import TapNote, HoldNote, SlideStartNote, SlideEndNote
 from ..event import NoteType

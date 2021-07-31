@@ -1,7 +1,7 @@
-from typing import Union, Callable, List
 import copy
+from typing import Union, Callable, List
 
-from ..event import SimaiNote, MaiNote, NoteType
+from ..event import SimaiNote, NoteType
 from ..maisdt import (
     MaiSdt,
     HoldNote as SDTHoldNote,
