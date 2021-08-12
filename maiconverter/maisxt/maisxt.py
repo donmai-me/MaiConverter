@@ -443,11 +443,18 @@ class MaiSxt:
         for note in self.notes:
             note.measure = round((note.measure + offset) * 10000.0) / 10000.0
 
-    def measure_to_second(self, measure: float) -> float:
+    def measure_to_second(self, measure: float, decrement: bool = True) -> float:
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         return measure_to_second(measure, [(0.0, self.bpm)])
 
-    def second_to_measure(self, seconds: float) -> float:
-        return second_to_measure(seconds, [(0.0, self.bpm)])
+    def second_to_measure(self, seconds: float, increment: bool = True) -> float:
+        measure = second_to_measure(seconds, [(0.0, self.bpm)])
+        if increment:
+            measure += 1.0
+
+        return measure
 
     def export(self) -> str:
         """Generates an sdt text from all the notes defined.

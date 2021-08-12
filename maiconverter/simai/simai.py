@@ -599,15 +599,22 @@ class SimaiChart:
 
             bpm.measure = round(bpm.measure + offset, 4)
 
-    def measure_to_second(self, measure: float) -> float:
+    def measure_to_second(self, measure: float, decrement: bool = True) -> float:
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         bpms = [(bpm.measure, bpm.bpm) for bpm in self.bpms]
 
         return measure_to_second(measure, bpms)
 
-    def second_to_measure(self, seconds: float) -> float:
+    def second_to_measure(self, seconds: float, increment: bool = True) -> float:
         bpms = [(bpm.measure, bpm.bpm) for bpm in self.bpms]
+        measure = second_to_measure(seconds, bpms)
 
-        return second_to_measure(seconds, bpms)
+        if increment:
+            measure += 1.0
+
+        return measure
 
     def export(self, max_den: int = 1000) -> str:
         # TODO: Rewrite this
