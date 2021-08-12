@@ -7,15 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - New time tracking functions: measure_to_second, second_to_measure, and quantise.
-- New script (sdt_change_bpm.py) that converts an MaiSxt chart written in one BPM to another.
-- New script (sdt_to_ma2_with_bpms.py) that converts an MaiSxt chart to a MaiMa2 chart that copies the BPM skeleton of another MaiMa2 chart.
+- New script (sxt_change_bpm.py) that converts an MaiSxt chart written in one BPM to another.
+- New script (sxt_to_ma2_with_bpms.py) that converts an MaiSxt chart to a MaiMa2 chart that copies the BPM skeleton of another MaiMa2 chart.
 
 ### Changed
 - All chart formats now internally start at measure 0 instead of 1.
 - All set, add, and del events on all chart formats have an optional boolean switch to disable measure decrement.
 - Renamed MaiSDT to MaiSxt.
 - Renamed maisdt package to maisxt.
+- Renamed all conversion functions that mentions sdt to sxt.
 - MaiSxt constructor now requires BPM.
+- Conversion functions that converts from MaiSxt no longer accepts initial_bpm parameter.
 - Encryption and decryption methods now only accept raw bytes.
 - MaiMa2 resolution moved from being an attribute to a parameter in export method.
 - Migrated changelog format to keep a changelog and remove entries from unreleased versions.

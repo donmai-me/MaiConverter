@@ -10,7 +10,7 @@ from maiconverter.tool import quantise
 
 # noinspection PyShadowingNames
 def main():
-    parser = argparse.ArgumentParser("sdt to ma2 with bpm changes")
+    parser = argparse.ArgumentParser("sxt to ma2 with bpm changes")
     parser.add_argument("input", type=str)
     parser.add_argument("conform", type=str)
     parser.add_argument("bpm", type=float)
@@ -27,15 +27,19 @@ def main():
     conform_ma2 = MaiMa2.open(args.conform)
 
     new_notes = []
-    offset = 1.0 - conform_ma2.second_to_measure(ma2.measure_to_second(1.0))
+    offset = 0.0 - conform_ma2.second_to_measure(
+        ma2.measure_to_second(0.0, decrement=False), increment=False
+    )
     for note in ma2.notes:
         current_measure = note.measure
-        current_time = ma2.measure_to_second(current_measure)
-        current_conform_measure = conform_ma2.second_to_measure(current_time)
-
-        scale = conform_ma2.get_bpm(current_conform_measure) / ma2.get_bpm(
-            current_measure
+        current_time = ma2.measure_to_second(current_measure, decrement=False)
+        current_conform_measure = conform_ma2.second_to_measure(
+            current_time, increment=False
         )
+
+        scale = conform_ma2.get_bpm(
+            current_conform_measure, decrement=False
+        ) / ma2.get_bpm(current_measure, decrement=False)
 
         note = copy.deepcopy(note)
         note.measure = quantise(current_conform_measure + offset, args.quantise)

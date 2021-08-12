@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 from ..event import Event, EventType, SimaiNote, NoteType
 
 
-# For straightforward slide pattern conversion from simai to sdt/ma2.
+# For straightforward slide pattern conversion from simai to sxt/ma2.
 # Use simai_pattern_to_int to cover all simai slide patterns.
 slide_dict = {
     "-": 1,

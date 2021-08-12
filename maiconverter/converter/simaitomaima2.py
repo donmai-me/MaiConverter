@@ -13,20 +13,13 @@ from ..simai import (
 from ..event import SimaiNote, NoteType
 
 
-def simai_to_ma2(
-    simai: SimaiChart, click_res: int = 384, fes_mode: bool = False
-) -> MaiMa2:
+def simai_to_ma2(simai: SimaiChart, fes_mode: bool = False) -> MaiMa2:
     ma2 = MaiMa2(fes_mode=fes_mode)
 
     for bpm in simai.bpms:
-        if bpm.measure <= 1.0:
-            measure = 0.0
-        else:
-            measure = bpm.measure
+        ma2.set_bpm(bpm.measure, bpm.bpm, decrement=False)
 
-        ma2.set_bpm(measure, bpm.bpm)
-
-    ma2.set_meter(0.0, 4, 4)
+    ma2.set_meter(0.0, 4, 4, decrement=False)
     convert_notes(ma2, simai.notes)
     return ma2
 
@@ -48,6 +41,7 @@ def convert_notes(ma2: MaiMa2, simai_notes: List[SimaiNote]) -> None:
                 is_break=is_break,
                 is_star=is_star,
                 is_ex=is_ex,
+                decrement=False,
             )
         elif isinstance(simai_note, HoldNote):
             is_ex = note_type == NoteType.ex_hold
@@ -56,6 +50,7 @@ def convert_notes(ma2: MaiMa2, simai_notes: List[SimaiNote]) -> None:
                 position=simai_note.position,
                 duration=simai_note.duration,
                 is_ex=is_ex,
+                decrement=False,
             )
         elif isinstance(simai_note, SlideNote):
             # Ma2 slide durations does not include the delay
@@ -68,6 +63,7 @@ def convert_notes(ma2: MaiMa2, simai_notes: List[SimaiNote]) -> None:
                 duration=simai_note.duration,
                 pattern=pattern,
                 delay=simai_note.delay,
+                decrement=False,
             )
         elif isinstance(simai_note, TouchTapNote):
             ma2.add_touch_tap(
@@ -75,6 +71,7 @@ def convert_notes(ma2: MaiMa2, simai_notes: List[SimaiNote]) -> None:
                 position=simai_note.position,
                 region=simai_note.region,
                 is_firework=simai_note.is_firework,
+                decrement=False,
             )
         elif isinstance(simai_note, TouchHoldNote):
             ma2.add_touch_hold(
@@ -83,6 +80,7 @@ def convert_notes(ma2: MaiMa2, simai_notes: List[SimaiNote]) -> None:
                 region=simai_note.region,
                 duration=simai_note.duration,
                 is_firework=simai_note.is_firework,
+                decrement=False,
             )
         else:
-            print("Warning: Unknown note type {}".format(note_type))
+            print(f"Warning: Unknown note type {note_type}")

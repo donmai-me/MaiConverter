@@ -51,7 +51,7 @@ def crypto(args, output):
                     file for file in files if not re.search(r"\.tbl", file) is None
                 ]
             else:
-                # Only accept ".sdt" ".sct" ".szt" ".srt" files
+                # Only accept ".sxt" ".sct" ".szt" ".srt" files
                 files = [
                     file for file in files if not re.search(r"\.s.t", file) is None
                 ]
@@ -104,7 +104,7 @@ def chart_convert(args, output):
             if args.command in ["ma2tosdt", "ma2tosimai"]:
                 handle_ma2(file, name, output, args)
             elif args.command in ["sdttoma2", "sdttosimai"]:
-                handle_sdt(file, name, output, args)
+                handle_sxt(file, name, output, args)
             elif args.command in ["simaifiletoma2", "simaifiletosdt"]:
                 handle_simai_file(file, output, args)
             else:
@@ -122,7 +122,7 @@ def handle_ma2(file, name, output_path, args):
 
     if args.command == "ma2tosdt":
         output = ma2_to_sdt(ma2, convert_touch=args.convert_touch)
-        ext = ".sdt"
+        ext = ".sxt"
     else:
         output = ma2_to_simai(ma2)
         ext = ".txt"
@@ -136,16 +136,16 @@ def handle_ma2(file, name, output_path, args):
             out.write(output.export())
 
 
-def handle_sdt(file, name, output_path, args):
-    sdt = MaiSxt.open(file, encoding=args.encoding, bpm=args.bpm)
+def handle_sxt(file, name, output_path, args):
+    sxt = MaiSxt.open(file, encoding=args.encoding, bpm=args.bpm)
     if len(args.delay) != 0:
-        sdt.offset(args.delay)
+        sxt.offset(args.delay)
 
     if args.command == "sdttoma2":
-        output = sdt_to_ma2(sdt, initial_bpm=args.bpm)
+        output = sdt_to_ma2(sxt)
         ext = ".ma2"
     else:
-        output = sdt_to_simai(sdt, initial_bpm=args.bpm)
+        output = sdt_to_simai(sxt)
         ext = ".txt"
 
     with open(
@@ -166,7 +166,7 @@ def handle_simai_chart(file, name, output_path, args):
         simai.offset(args.delay)
 
     if args.command == "simaitosdt":
-        ext = ".sdt"
+        ext = ".sxt"
         converted = simai_to_sdt(simai, convert_touch=args.convert_touch)
     else:
         ext = ".ma2"
@@ -187,7 +187,7 @@ def handle_simai_file(file, output_path, args):
 
         try:
             if args.command == "simaifiletosdt":
-                ext = ".sdt"
+                ext = ".sxt"
                 converted = simai_to_sdt(simai_chart, convert_touch=args.convert_touch)
             else:
                 ext = ".ma2"
@@ -212,53 +212,29 @@ def handle_simai_file(file, output_path, args):
 def handle_file(input_path, output_dir, command, key):
     file_name = os.path.splitext(os.path.basename(input_path))[0]
     if command == "encrypt":
-
         file_ext = os.path.splitext(input_path)[1].replace("t", "b")
-        if os.path.exists(os.path.join(output_dir, file_name + file_ext)):
-            print("File {} exists! Skipping".format(file_name + file_ext))
-            return
+        output = finale_file_encrypt(key, input_path)
 
-        cipher_text = finale_file_encrypt(key, input_path)
-        with open(os.path.join(output_dir, file_name + file_ext), "xb") as f:
-            f.write(cipher_text)
     else:
         file_ext = os.path.splitext(input_path)[1].replace("b", "t")
-        if os.path.exists(os.path.join(output_dir, file_name + file_ext)):
-            print("File {} exists! Skipping".format(file_name + file_ext))
-            return
+        output = finale_file_decrypt(key, input_path)
 
-        plain_text = finale_file_decrypt(key, input_path)
-        with open(
-            os.path.join(output_dir, file_name + file_ext),
-            "xb",
-        ) as f:
-            f.write(plain_text)
+    with open(os.path.join(output_dir, file_name + file_ext), "wb") as f:
+        f.write(output)
 
 
 def handle_db(input_path, output_dir, command, key):
+    file_name = os.path.splitext(os.path.basename(input_path))[0]
+
     if command == "encrypt":
-        file_name = os.path.splitext(os.path.basename(input_path))[0]
         file_ext = ".bin"
-        if os.path.exists(os.path.join(output_dir, file_name + file_ext)):
-            print("File {} exists! Skipping".format(file_name + file_ext))
-            return
-
-        cipher_text = finale_file_encrypt(key, input_path)
-        with open(os.path.join(output_dir, file_name + file_ext), "xb") as f:
-            f.write(cipher_text)
+        output = finale_file_encrypt(key, input_path)
     else:
-        file_name = os.path.splitext(os.path.basename(input_path))[0]
         file_ext = ".tbl"
-        if os.path.exists(os.path.join(output_dir, file_name + file_ext)):
-            print("File {} exists! Skipping".format(file_name + file_ext))
-            return
+        output = finale_file_decrypt(key, input_path)
 
-        plain_text = finale_file_decrypt(key, input_path)
-        with open(
-            os.path.join(output_dir, file_name + file_ext),
-            "xb",
-        ) as f:
-            f.write(plain_text)
+    with open(os.path.join(output_dir, file_name + file_ext), "wb") as f:
+        f.write(output)
 
 
 def parse_arg():

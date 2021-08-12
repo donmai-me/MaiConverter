@@ -6,7 +6,7 @@ from maiconverter.maisxt import MaiSxt, HoldNote, SlideStartNote
 
 
 def main():
-    parser = argparse.ArgumentParser("sdt to ma2 with bpm changes")
+    parser = argparse.ArgumentParser("sxt to ma2 with bpm changes")
     parser.add_argument("input", type=str)
     parser.add_argument("original_bpm", type=float)
     parser.add_argument("new_bpm", type=float)
@@ -18,8 +18,8 @@ def main():
     scale = args.new_bpm / args.original_bpm
 
     new_notes = []
-    previous_measure = 1.0
-    equivalent_current_measure = 1.0
+    previous_measure = 0.0
+    equivalent_current_measure = 0.0
     for note in sdt.notes:
         current_measure = note.measure
         equivalent_current_measure += scale * (current_measure - previous_measure)
@@ -40,7 +40,7 @@ def main():
     sdt.notes = new_notes
 
     filename, _ = os.path.splitext(args.input)
-    with open(filename + f"_bpm{args.new_bpm}.sdt", "w", newline="\r\n") as out:
+    with open(filename + f"_bpm{args.new_bpm}.sxt", "w", newline="\r\n") as out:
         out.write(sdt.export())
 
 

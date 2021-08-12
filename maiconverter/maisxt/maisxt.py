@@ -10,10 +10,10 @@ from ..tool import measure_to_second, second_to_measure
 
 
 class MaiSxt:
-    """A class that represents an sdt (and predecessors) chart.
+    """A class that represents an sxt (and predecessors) chart.
     Only contains notes, and does not include information
     such as song name, chart difficulty, composer, chart maker, etc.
-    It only contains enough information to build a working sdt
+    It only contains enough information to build a working sxt
     chart file.
 
     Attributes:
@@ -206,9 +206,9 @@ class MaiSxt:
             Add a regular tap note at measure 1 at button 2,
             and a break tap note at measure 2 at button 7.
 
-            >>> sdt = MaiSxt()
-            >>> sdt.add_tap(1, 2)
-            >>> sdt.add_tap(2, 7, is_break=True)
+            >>> sxt = MaiSxt()
+            >>> sxt.add_tap(1, 2)
+            >>> sxt.add_tap(2, 7, is_break=True)
         """
         if decrement:
             measure = max(0.0, measure - 1.0)
@@ -229,9 +229,9 @@ class MaiSxt:
         Examples:
             Create a break tap note at measure 26.75 at button 4. Then delete it.
 
-            >>> sdt = MaiSxt()
-            >>> sdt.add_tap(26.75, 4, is_break=True)
-            >>> sdt.del_tap(26.75, 4)
+            >>> sxt = MaiSxt()
+            >>> sxt.add_tap(26.75, 4, is_break=True)
+            >>> sxt.del_tap(26.75, 4)
         """
         if decrement:
             measure = max(0.0, measure - 1.0)
@@ -265,8 +265,8 @@ class MaiSxt:
             Add a regular hold note at button 5 at measure 1.5, with
             duration of 2.75 measures.
 
-            >>> sdt = MaiSxt()
-            >>> sdt.add_hold(1.5, 5, 2.75)
+            >>> sxt = MaiSxt()
+            >>> sxt.add_hold(1.5, 5, 2.75)
         """
         if decrement:
             measure = max(0.0, measure - 1.0)
@@ -287,9 +287,9 @@ class MaiSxt:
             Add a regular hold note at button 0 at measure 3.25 with duration of 2 measures
             and delete it.
 
-            >>> sdt = MaiSxt()
-            >>> sdt.add_hold(3.25, 0, 2)
-            >>> sdt.del_hold(3.25, 0)
+            >>> sxt = MaiSxt()
+            >>> sxt.add_hold(3.25, 0, 2)
+            >>> sxt.del_hold(3.25, 0)
         """
         if decrement:
             measure = max(0.0, measure - 1.0)
@@ -334,8 +334,8 @@ class MaiSxt:
             duration of 1.75 measures, delay of 0.25 measures,
             pattern of 1.
 
-            >>> sdt = MaiSxt()
-            >>> sdt.add_slide(2, 6, 3, 1.75, 1)
+            >>> sxt = MaiSxt()
+            >>> sxt.add_slide(2, 6, 3, 1.75, 1)
         """
         if decrement:
             measure = max(0.0, measure - 1.0)
@@ -457,12 +457,12 @@ class MaiSxt:
         return measure
 
     def export(self) -> str:
-        """Generates an sdt text from all the notes defined.
+        """Generates an sxt text from all the notes defined.
 
         Returns:
             A multiline string. The returned
-            string is a complete and functioning sdt text and should
-            be stored as-is in a text file with an sdt file extension.
+            string is a complete and functioning sxt text and should
+            be stored as-is in a text file with an sxt file extension.
         """
         self.notes.sort()
         return "\n".join([str(note) for note in self.notes]) + "\n"

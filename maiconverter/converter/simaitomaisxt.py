@@ -19,15 +19,20 @@ from ..simai import (
 
 
 def _default_touch_converter(
-    sdt: MaiSxt, touch_note: Union[TouchTapNote, TouchHoldNote]
+    sxt: MaiSxt, touch_note: Union[TouchTapNote, TouchHoldNote]
 ) -> None:
     if isinstance(touch_note, TouchTapNote) and touch_note.region == "C":
-        sdt.add_tap(measure=touch_note.measure, position=0)
+        sxt.add_tap(measure=touch_note.measure, position=0, decrement=False)
     elif isinstance(touch_note, TouchTapNote):
-        sdt.add_tap(measure=touch_note.measure, position=touch_note.position)
+        sxt.add_tap(
+            measure=touch_note.measure, position=touch_note.position, decrement=False
+        )
     elif isinstance(touch_note, TouchHoldNote) and touch_note.region == "C":
-        sdt.add_hold(
-            measure=touch_note.measure, position=0, duration=touch_note.duration
+        sxt.add_hold(
+            measure=touch_note.measure,
+            position=0,
+            duration=touch_note.duration,
+            decrement=False,
         )
 
 
@@ -46,11 +51,11 @@ def simai_to_sdt(
     equivalent_notes = []
     for note in sdt.notes:
         current_measure = note.measure
-        current_time = simai.measure_to_second(current_measure)
-        scale = sdt.bpm / simai.get_bpm(current_measure)
+        current_time = simai.measure_to_second(current_measure, decrement=False)
+        scale = sdt.bpm / simai.get_bpm(current_measure, decrement=False)
 
         note = copy.deepcopy(note)
-        note.measure = sdt.second_to_measure(current_time)
+        note.measure = sdt.second_to_measure(current_time, increment=False)
 
         if isinstance(note, SDTHoldNote):
             note.duration = note.duration * scale
@@ -65,7 +70,7 @@ def simai_to_sdt(
 
 
 def convert_notes(
-    sdt: MaiSxt,
+    sxt: MaiSxt,
     simai_notes: List[SimaiNote],
     touch_converter: Callable[[MaiSxt, Union[TouchHoldNote, TouchTapNote]], None],
     convert_touch: bool,
@@ -76,38 +81,41 @@ def convert_notes(
         if isinstance(simai_note, TapNote):
             is_break = note_type in [NoteType.break_tap, NoteType.break_star]
             is_star = note_type in [NoteType.star, NoteType.break_star]
-            sdt.add_tap(
+            sxt.add_tap(
                 measure=simai_note.measure,
                 position=simai_note.position,
                 is_break=is_break,
                 is_star=is_star,
+                decrement=False,
             )
         elif isinstance(simai_note, HoldNote):
-            sdt.add_hold(
+            sxt.add_hold(
                 measure=simai_note.measure,
                 position=simai_note.position,
                 duration=simai_note.duration,
+                decrement=False,
             )
         elif isinstance(simai_note, SlideNote):
             # SDT slide duration include the delay
             # unlike in simai
             pattern = pattern_to_int(simai_note)
-            sdt.add_slide(
+            sxt.add_slide(
                 measure=simai_note.measure,
                 start_position=simai_note.position,
                 end_position=simai_note.end_position,
                 duration=simai_note.duration + simai_note.delay,
                 pattern=pattern,
                 delay=simai_note.delay,
+                decrement=False,
             )
         elif isinstance(simai_note, (TouchTapNote, TouchHoldNote)):
             # Touch tap and touch hold
             if convert_touch:
-                touch_converter(sdt, simai_note)
+                touch_converter(sxt, simai_note)
             else:
                 skipped_notes += 1
         else:
-            print("Warning: Unknown note type {}".format(note_type))
+            print(f"Warning: Unknown note type {note_type}")
 
     if skipped_notes > 0:
-        print("Skipped {} touch note(s)".format(skipped_notes))
+        print(f"Skipped {skipped_notes} touch note(s)")

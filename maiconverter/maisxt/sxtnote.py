@@ -24,7 +24,7 @@ class TapNote(MaiNote):
         is_break: bool = False,
         is_star: bool = False,
     ) -> None:
-        """Produces an sdt tap note.
+        """Produces an sxt tap note.
 
         Note:
             Please use MaiSxt class' add_tap method for adding
@@ -135,7 +135,7 @@ class SlideStartNote(MaiNote):
         slide_id: int,
         delay: float = 0.25,
     ) -> None:
-        """Produces an sdt slide start note.
+        """Produces an sxt slide start note.
 
         Note:
             Please use MaiSxt class' add_slide method for adding
@@ -179,7 +179,7 @@ class SlideEndNote(MaiNote):
     def __init__(
         self, measure: float, position: int, pattern: int, slide_id: int
     ) -> None:
-        """Produces an sdt slide end note.
+        """Produces an sxt slide end note.
 
         Note:
             Please use MaiSxt class' add_slide method for adding
@@ -208,7 +208,7 @@ class SlideEndNote(MaiNote):
 
 class HoldNote(MaiNote):
     def __init__(self, measure: float, position: int, duration: float) -> None:
-        """Produces an sdt hold note.
+        """Produces an sxt hold note.
 
         Note:
             Please use MaiSxt class' add_hold method for adding
@@ -234,10 +234,10 @@ class HoldNote(MaiNote):
 def sdt_note_to_str(
     note: Union[TapNote, HoldNote, SlideEndNote, SlideStartNote]
 ) -> str:
-    """Prints note into sdt-compatible lines.
+    """Prints note into sxt-compatible lines.
 
     Args:
-        note: A MaiNote to be converted to a sdt string.
+        note: A MaiNote to be converted to a sxt string.
 
     Returns:
         A single line string.

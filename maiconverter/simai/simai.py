@@ -63,7 +63,9 @@ class SimaiChart:
             for event in events:
                 event_type = event["type"]
                 if event_type == "bpm":
-                    simai_chart.set_bpm(simai_chart._measure, event["value"])
+                    simai_chart.set_bpm(
+                        simai_chart._measure, event["value"], decrement=False
+                    )
                 elif event_type == "divisor":
                     simai_chart._divisor = event["value"]
                 elif event_type == "tap":
@@ -88,6 +90,7 @@ class SimaiChart:
                         is_break=is_break,
                         is_star=is_star,
                         is_ex=is_ex,
+                        decrement=False,
                     )
                 elif event_type == "hold":
                     is_ex = False
@@ -106,6 +109,7 @@ class SimaiChart:
                         position=event["button"],
                         duration=event["duration"],
                         is_ex=is_ex,
+                        decrement=False,
                     )
                 elif event_type == "slide":
                     is_break, is_ex, is_tapless = False, False, False
@@ -137,6 +141,7 @@ class SimaiChart:
                             is_break=is_break,
                             is_star=True,
                             is_ex=is_ex,
+                            decrement=False,
                         )
                         star_positions.append(event["start_button"])
 
@@ -145,7 +150,7 @@ class SimaiChart:
                     delay = 0.25
                     if equivalent_bpm is not None:
                         multiplier = (
-                            simai_chart.get_bpm(simai_chart._measure + 1)
+                            simai_chart.get_bpm(simai_chart._measure, decrement=False)
                             / equivalent_bpm
                         )
                         duration = multiplier * duration
@@ -177,6 +182,7 @@ class SimaiChart:
                         position=event["location"],
                         region=event["region"],
                         is_firework=is_firework,
+                        decrement=False,
                     )
 
                 elif event_type == "touch_hold":
@@ -197,9 +203,10 @@ class SimaiChart:
                         region=event["region"],
                         duration=event["duration"],
                         is_firework=is_firework,
+                        decrement=False,
                     )
                 else:
-                    raise Exception("Unknown event type: " + str(event_type))
+                    raise Exception(f"Unknown event type: {event_type}")
 
             simai_chart._measure += 1 / simai_chart._divisor
 
@@ -381,6 +388,7 @@ class SimaiChart:
                 starts to move, in terms of measures. Defaults to 0.25.
             reflect_position: The button where the 'V' slide will first go to.
                 Optional, defaults to None.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a '-' slide at measure 2.25 from button 1 to button 5 with
@@ -523,6 +531,7 @@ class SimaiChart:
 
         Args:
             measure: Time, in measures.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Returns:
             Returns the bpm defined at given measure or None.
@@ -571,6 +580,7 @@ class SimaiChart:
 
         Args:
             measure: Time, in measures, where the bpm is defined.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Delete the BPM change defined at measure 24.
