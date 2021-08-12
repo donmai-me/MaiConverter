@@ -6,7 +6,7 @@ import traceback
 import maiconverter
 from maiconverter.maicrypt import finale_file_encrypt, finale_file_decrypt
 from maiconverter.maima2 import MaiMa2
-from maiconverter.maisdt import MaiSdt
+from maiconverter.maisxt import MaiSxt
 from maiconverter.simai import parse_file, SimaiChart
 from maiconverter.converter import (
     ma2_to_sdt,
@@ -137,7 +137,7 @@ def handle_ma2(file, name, output_path, args):
 
 
 def handle_sdt(file, name, output_path, args):
-    sdt = MaiSdt.open(file, encoding=args.encoding, bpm=args.bpm)
+    sdt = MaiSxt.open(file, encoding=args.encoding, bpm=args.bpm)
     if len(args.delay) != 0:
         sdt.offset(args.delay)
 
@@ -200,7 +200,7 @@ def handle_simai_file(file, output_path, args):
                 newline="\r\n",
                 encoding="utf-8",
             ) as out:
-                if isinstance(converted, MaiSdt):
+                if isinstance(converted, MaiSxt):
                     out.write(converted.export())
                 else:
                     out.write(converted.export(resolution=args.resolution))

@@ -24,7 +24,7 @@ setup(
         "maiconverter.event",
         "maiconverter.maicrypt",
         "maiconverter.maima2",
-        "maiconverter.maisdt",
+        "maiconverter.maisxt",
         "maiconverter.simai",
         "maiconverter.converter",
         "maiconverter.tool",

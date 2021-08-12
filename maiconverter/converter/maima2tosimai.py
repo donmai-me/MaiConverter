@@ -12,12 +12,7 @@ def ma2_to_simai(ma2: MaiMa2) -> SimaiChart:
     simai_chart = SimaiChart()
 
     for bpm in ma2.bpms:
-        if bpm.measure <= 1.0:
-            measure = 1.0
-        else:
-            measure = bpm.measure
-
-        simai_chart.set_bpm(measure, bpm.bpm)
+        simai_chart.set_bpm(bpm.measure, bpm.bpm)
 
     convert_notes(simai_chart, ma2.notes)
 

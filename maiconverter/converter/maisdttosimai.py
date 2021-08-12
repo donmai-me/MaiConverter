@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Union
 
 from ..simai import SimaiChart, pattern_from_int
-from ..maisdt import MaiSdt, TapNote, HoldNote, SlideStartNote, SlideEndNote
+from ..maisxt import MaiSxt, TapNote, HoldNote, SlideStartNote, SlideEndNote
 from ..event import NoteType
 
 
@@ -15,7 +15,7 @@ class StartSlide:
     slide_id: int
 
 
-def sdt_to_simai(sdt: MaiSdt, initial_bpm: float) -> SimaiChart:
+def sdt_to_simai(sdt: MaiSxt, initial_bpm: float) -> SimaiChart:
     simai_chart = SimaiChart()
     simai_chart.set_bpm(1.0, initial_bpm)
     convert_notes(simai_chart, sdt.notes)

@@ -2,7 +2,7 @@ import argparse
 import copy
 import os.path
 
-from maiconverter.maisdt import MaiSdt, HoldNote, SlideStartNote
+from maiconverter.maisxt import MaiSxt, HoldNote, SlideStartNote
 
 
 def main():
@@ -12,7 +12,7 @@ def main():
     parser.add_argument("new_bpm", type=float)
 
     args = parser.parse_args()
-    sdt = MaiSdt.open(args.input, bpm=args.new_bpm)
+    sdt = MaiSxt.open(args.input, bpm=args.new_bpm)
     sdt.notes.sort(key=lambda x: x.measure)
 
     scale = args.new_bpm / args.original_bpm

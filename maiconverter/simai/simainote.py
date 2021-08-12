@@ -217,19 +217,19 @@ def pattern_from_int(
     inv_slide_dict = {v: k for k, v in slide_dict.items()}
     dict_result = inv_slide_dict.get(pattern)
     if not dict_result is None:
-        return (dict_result, None)
+        return dict_result, None
     elif pattern in [2, 3]:
         # Have I told you how much I hate the simai format?
         is_cw = pattern == 3
         distance = slide_distance(start_position, end_position, is_cw)
         if distance <= 3:
-            return ("^", None)
+            return "^", None
         elif (start_position in top_list and is_cw) or not (
             start_position in top_list or is_cw
         ):
-            return (">", None)
+            return ">", None
         else:
-            return ("<", None)
+            return "<", None
     elif pattern in [11, 12]:
         if pattern == 11:
             reflect_position = start_position - 2
@@ -240,7 +240,7 @@ def pattern_from_int(
             if reflect_position > 7:
                 reflect_position -= 8
 
-        return ("V", reflect_position)
+        return "V", reflect_position
     else:
         raise ValueError("Unknown pattern: " + str(pattern))
 

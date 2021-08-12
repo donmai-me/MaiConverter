@@ -1,14 +1,15 @@
 from __future__ import annotations
 
+import math
 import re
 from typing import Union, List, Dict
 
-from .sdtnote import TapNote, HoldNote, SlideStartNote, SlideEndNote
+from .sxtnote import TapNote, HoldNote, SlideStartNote, SlideEndNote
 from ..event import NoteType
 from ..tool import measure_to_second, second_to_measure
 
 
-class MaiSdt:
+class MaiSxt:
     """A class that represents an sdt (and predecessors) chart.
     Only contains notes, and does not include information
     such as song name, chart difficulty, composer, chart maker, etc.
@@ -30,7 +31,7 @@ class MaiSdt:
         self.slide_count = 1
 
     @classmethod
-    def open(cls, path: str, bpm: float, encoding: str = "utf-8") -> MaiSdt:
+    def open(cls, path: str, bpm: float, encoding: str = "utf-8") -> MaiSxt:
         sdt = cls(bpm=bpm)
         with open(path, "r", encoding=encoding) as file:
             for line in file:
@@ -52,18 +53,19 @@ class MaiSdt:
 
         Raises:
             ValueError: When the number of columns are not between 7 and 9.
-            RuntimeError: When an end slide is declared before an beginning slide.
-            TypeError: When an unknown note type is given,
+                When an end slide is declared before an beginning slide.
+                When an unknown note type is given.
         """
         values = line.rstrip().rstrip(",").replace(" ", "").split(",")
         if not (7 <= len(values) <= 9):
-            raise ValueError(f"Line has invalid number of columns! {len(values)}")
+            raise ValueError(f"Line has invalid number of columns {len(values)}")
+
         measure = float(values[0]) + float(values[1])
         position = int(values[3])
         note_type = int(values[4])
 
         if note_type in [1, 3, 4, 5]:
-            # Regular tap note, break tap note, star note,
+            # Regular tap note, break tap note, star note, break star note
             is_star = note_type in [4, 5]
             is_break = note_type in [3, 5]
             self.add_tap(
@@ -96,7 +98,7 @@ class MaiSdt:
 
             # Get information about corresponding start slide
             if slide_id not in self.start_slide_notes:
-                raise RuntimeError("End slide is declared before slide start!")
+                raise ValueError("End slide is declared before slide start!")
 
             start_slide = self.start_slide_notes[slide_id]
             start_measure = start_slide["measure"]
@@ -113,7 +115,7 @@ class MaiSdt:
                 delay,
             )
         else:
-            raise TypeError("Unknown note type {}".format(note_type))
+            raise ValueError("Unknown note type {}".format(note_type))
 
     def parse_srt_line(self, line: str) -> None:
         """Parse an SRT comma-separated line.
@@ -123,8 +125,8 @@ class MaiSdt:
 
         Raises:
             ValueError: When the number of columns are not between 7 and 9.
-            RuntimeError: When an end slide is declared before an beginning slide.
-            TypeError: When an unknown note type is given,
+                When an end slide is declared before an beginning slide.
+                When an unknown note type is given.
         """
         srt_slide_to_later_dict = {
             0: 1,
@@ -181,7 +183,7 @@ class MaiSdt:
                 int(slide_pattern),
             )
         else:
-            raise TypeError("Unknown note type {}".format(note_type))
+            raise ValueError(f"Unknown note type {note_type}")
 
     def add_tap(
         self,
@@ -189,6 +191,7 @@ class MaiSdt:
         position: int,
         is_break: bool = False,
         is_star: bool = False,
+        decrement: bool = True,
     ) -> None:
         """Adds a tap note to the list of notes.
 
@@ -197,83 +200,105 @@ class MaiSdt:
             position: Button where the tap note happens.
             is_break: Whether a tap note is a break note.
             is_star: Whether a tap note is a star note.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a regular tap note at measure 1 at button 2,
             and a break tap note at measure 2 at button 7.
 
-            >>> sdt = MaiSdt()
+            >>> sdt = MaiSxt()
             >>> sdt.add_tap(1, 2)
             >>> sdt.add_tap(2, 7, is_break=True)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         tap_note = TapNote(
             measure=measure, position=position, is_break=is_break, is_star=is_star
         )
         self.notes.append(tap_note)
 
-    def del_tap(self, measure: float, position: int) -> None:
+    def del_tap(self, measure: float, position: int, decrement: bool = True) -> None:
         """Deletes a tap note from the list of notes.
 
         Args:
             measure: Time when the note starts, in terms of measures.
             position: Button where the tap note happens.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Create a break tap note at measure 26.75 at button 4. Then delete it.
 
-            >>> sdt = MaiSdt()
+            >>> sdt = MaiSxt()
             >>> sdt.add_tap(26.75, 4, is_break=True)
             >>> sdt.del_tap(26.75, 4)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         tap_notes = [
             x
             for x in self.notes
             if isinstance(x, TapNote)
-            and x.measure == measure
+            and math.isclose(x.measure, measure, abs_tol=0.0001)
             and x.position == position
         ]
         for note in tap_notes:
             self.notes.remove(note)
 
-    def add_hold(self, measure: float, position: int, duration: float) -> None:
+    def add_hold(
+        self,
+        measure: float,
+        position: int,
+        duration: float,
+        decrement: bool = True,
+    ) -> None:
         """Adds a hold note to the list of notes.
 
         Args:
             measure: Time when the hold starts, in terms of measures.
             position: Button where the hold happens.
             duration: Total duration of the hold, in terms of measures.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a regular hold note at button 5 at measure 1.5, with
             duration of 2.75 measures.
 
-            >>> sdt = MaiSdt()
+            >>> sdt = MaiSxt()
             >>> sdt.add_hold(1.5, 5, 2.75)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         hold_note = HoldNote(measure=measure, position=position, duration=duration)
         self.notes.append(hold_note)
 
-    def del_hold(self, measure: float, position: int) -> None:
+    def del_hold(self, measure: float, position: int, decrement: bool = True) -> None:
         """Deletes the matching hold note in the list of notes. If there are multiple
         matches, all matching notes are deleted. If there are no match, nothing happens.
 
         Args:
             measure: Time when the note starts, in terms of measures.
             position: Button where the hold note happens.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a regular hold note at button 0 at measure 3.25 with duration of 2 measures
             and delete it.
 
-            >>> sdt = MaiSdt()
+            >>> sdt = MaiSxt()
             >>> sdt.add_hold(3.25, 0, 2)
             >>> sdt.del_hold(3.25, 0)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         hold_notes = [
             x
             for x in self.notes
             if isinstance(x, HoldNote)
-            and x.measure == measure
+            and math.isclose(x.measure, measure, abs_tol=0.0001)
             and x.position == position
         ]
         for note in hold_notes:
@@ -288,6 +313,7 @@ class MaiSdt:
         duration: float,
         pattern: int,
         delay: float = 0.25,
+        decrement: bool = True,
     ) -> None:
         """Adds both a start slide and end slide note to the list of notes.
 
@@ -301,15 +327,19 @@ class MaiSdt:
             pattern: Numerical representation of the slide pattern.
             delay: Duration from when the slide appears and when it
                 starts to move, in terms of measures. Defaults to 0.25.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a slide at measure 2 from button 6 to button 3 with
             duration of 1.75 measures, delay of 0.25 measures,
             pattern of 1.
 
-            >>> sdt = MaiSdt()
+            >>> sdt = MaiSxt()
             >>> sdt.add_slide(2, 6, 3, 1.75, 1)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         slide_id = self.slide_count
         start_slide = SlideStartNote(
             measure=measure,
@@ -335,18 +365,27 @@ class MaiSdt:
             for x in self.notes
             if isinstance(x, TapNote)
             and x.note_type in [NoteType.star, NoteType.break_star]
-            and x.measure == measure
+            and math.isclose(x.measure, measure, abs_tol=0.0001)
             and x.position == start_position
         ]
         for star_note in star_notes:
             star_note.amount += 1
 
-    def del_slide(self, measure: float, start_position: int, end_position: int) -> None:
+    def del_slide(
+        self,
+        measure: float,
+        start_position: int,
+        end_position: int,
+        decrement: bool = True,
+    ) -> None:
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         start_slides = [
             x
             for x in self.notes
             if isinstance(x, SlideStartNote)
-            and x.measure == measure
+            and math.isclose(x.measure, measure, abs_tol=0.0001)
             and x.position == start_position
         ]
         end_slides: List[SlideEndNote] = []
@@ -374,7 +413,7 @@ class MaiSdt:
             for x in self.notes
             if isinstance(x, TapNote)
             and x.note_type in [NoteType.star, NoteType.break_star]
-            and x.measure == measure
+            and math.isclose(x.measure, measure, abs_tol=0.0001)
             and x.position == start_position
         ]
 
@@ -419,8 +458,4 @@ class MaiSdt:
             be stored as-is in a text file with an sdt file extension.
         """
         self.notes.sort()
-        result = ""
-        for note in self.notes:
-            result += str(note)
-
-        return result
+        return "\n".join([str(note) for note in self.notes]) + "\n"

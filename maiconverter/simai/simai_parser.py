@@ -414,6 +414,6 @@ def parse_fragment(fragment: str, lark_file: str = "simai_fragment.lark") -> Lis
     parser = Lark.open(lark_file, rel_to=__file__, parser="lalr")
     try:
         return FragmentTransformer().transform(parser.parse(fragment))
-    except Exception as e:
+    except Exception:
         print(f"Error parsing {fragment}")
         raise

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from collections import defaultdict
 from typing import Tuple, List, Union
 
 from .ma2note import (
@@ -28,7 +29,6 @@ class MaiMa2:
     chart file.
 
     Attributes:
-        click_res (int): Like resolution but for CLK events.
         fes_mode (bool): Whether a chart is an utage.
         bpms (list[BPM]): Contains bpm events of the chart.
         meters (dict[float, Meter]): Contains meter events
@@ -42,35 +42,25 @@ class MaiMa2:
 
     def __init__(
         self,
-        click_res: int = 384,
         fes_mode: bool = False,
         version: str = MA2_VERSION,
     ):
         """Produces a MaiMa2 object.
 
         Args:
-            click_res: Like resolution but for CLK events.
             fes_mode: Whether a chart is an utage.
             version: Chart version.
 
-        Raises:
-            ValueError: When resolution or click_res is not positive.
 
         Examples:
-            Create a regular ma2 object with default resolution and
-            click_res.
+            Create a regular ma2 object.
 
             >>> ma2 = MaiMa2()
 
-            Create an utage ma2 with resolution of 200.
+            Create an utage ma2.
 
-            >>> ma2 = MaiMa2(resolution=200, fes_mode=True)
+            >>> ma2 = MaiMa2(fes_mode=True)
         """
-        # TODO: Remove compatible code and version attribute.
-        if click_res <= 0:
-            raise ValueError(f"Click is not positive {click_res}")
-
-        self.click_res = click_res
         self.fes_mode = fes_mode
         self.bpms: List[BPM] = []
         self.meters: List[Meter] = []
@@ -117,7 +107,7 @@ class MaiMa2:
         else:
             raise ValueError(f"Unknown Ma2 version: {self.version}")
 
-    def set_bpm(self, measure: float, bpm: float) -> None:
+    def set_bpm(self, measure: float, bpm: float, decrement: bool = True) -> None:
         """Sets the bpm at given measure.
 
         Note:
@@ -127,6 +117,7 @@ class MaiMa2:
         Args:
             measure: Time, in measures, where the bpm is defined.
             bpm: The tempo in beat per minutes.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             In a chart, the initial bpm is 180 then changes
@@ -136,14 +127,26 @@ class MaiMa2:
             >>> ma2.set_bpm(0, 180)
             >>> ma2.set_bpm(12, 250)
         """
-        self.del_bpm(measure)
+        if decrement:
+            if measure != 0.0 and measure < 1.0:
+                raise ValueError(
+                    "Non-starting BPM measures should not be less than 1.0"
+                )
+            if measure == 1.0:
+                raise ValueError("Starting BPM measure should be at measure 0")
+
+            measure = max(0.0, measure - 1.0)
+
+        self.del_bpm(measure, decrement)
         self.bpms.append(BPM(measure, bpm))
 
-    def get_bpm(self, measure: float) -> float:
+    def get_bpm(self, measure: float, decrement: bool = True) -> float:
         """Gets the bpm at given measure.
 
         Args:
             measure: Time, in measures.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
+
 
         Returns:
             Returns the bpm defined at given measure or None.
@@ -165,27 +168,25 @@ class MaiMa2:
         """
         if len(self.bpms) == 0:
             raise ValueError("No BPMs defined")
-        if measure < 0:
-            raise ValueError(f"Measure is negative {measure}")
-
-        bpm_measures = [bpm.measure for bpm in self.bpms]
-        bpm_measures = list(set(bpm_measures))
-
-        if not any([x for x in bpm_measures if 0.0 <= x <= 1.0]):
+        if not any([0.0 == x.measure for x in self.bpms]):
             raise ValueError("No starting BPM defined")
 
-        bpm_measures.sort()
-        previous_measure = 0.0
-        for bpm_measure in bpm_measures:
-            if bpm_measure <= measure:
-                previous_measure = bpm_measure
-            else:
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
+        self.bpms.sort(key=lambda x: x.measure)
+        previous_bpm = self.bpms[0].bpm
+        for bpm in self.bpms:
+            if math.isclose(measure, bpm.measure, abs_tol=0.0001):
+                return bpm.bpm
+            if bpm.measure > measure:
                 break
 
-        bpm_result = [bpm.bpm for bpm in self.bpms if bpm.measure == previous_measure]
-        return bpm_result[0]
+            previous_bpm = bpm.bpm
 
-    def del_bpm(self, measure: float):
+        return previous_bpm
+
+    def del_bpm(self, measure: float, decrement: bool = True):
         """Deletes the bpm at given measure.
 
         Note:
@@ -193,18 +194,28 @@ class MaiMa2:
 
         Args:
             measure: Time, in measures, where the bpm is defined.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Delete the BPM change defined at measure 24.
 
             >>> ma2.del_bpm(24)
         """
-        bpms = [x for x in self.bpms if x.measure == measure]
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
+        bpms = [
+            x for x in self.bpms if math.isclose(x.measure, measure, abs_tol=0.0001)
+        ]
         for x in bpms:
             self.bpms.remove(x)
 
     def set_meter(
-        self, measure: float, meter_numerator: int, meter_denominator: int
+        self,
+        measure: float,
+        meter_numerator: int,
+        meter_denominator: int,
+        decrement: bool = True,
     ) -> None:
         """Sets the meter signature at given measure.
 
@@ -216,6 +227,7 @@ class MaiMa2:
             measure: Time, in measures, where the bpm is defined.
             meter_numerator: The upper numeral in a meter signature.
             meter_denominator: The lower numeral in a meter signature.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             In a chart, the initial meter is 4/4 then changes
@@ -225,13 +237,18 @@ class MaiMa2:
             >>> ma2.set_meter(0, 4, 4)
             >>> ma2.set_meter(5, 6, 8)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
+        self.del_meter(measure, decrement)
         self.meters.append(Meter(measure, meter_numerator, meter_denominator))
 
-    def get_meter(self, measure) -> Tuple[int, int]:
+    def get_meter(self, measure: float, decrement: bool = True) -> Tuple[int, int]:
         """Gets the bpm at given measure.
 
         Args:
             measure: Time, in measures.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Returns:
             Returns a tuple (numerator, denominator) defined at
@@ -250,30 +267,31 @@ class MaiMa2:
         """
         if len(self.meters) == 0:
             raise ValueError("No meters defined")
-        if measure < 0:
-            raise ValueError("Measure is negative number " + str(measure))
 
-        meter_measures = [meter.measure for meter in self.meters]
-        meter_measures = list(set(meter_measures))
+        if decrement:
+            measure = max(0.0, measure - 1.0)
 
-        if not any([x for x in meter_measures if 0.0 <= x <= 1.0]):
-            raise ValueError("No starting meters defined")
-
-        meter_measures.sort()
-        previous_measure = 0.0
-        for meter_measure in meter_measures:
-            if meter_measure <= measure:
-                previous_measure = meter_measure
-            else:
+        self.meters.sort(key=lambda x: x.measure)
+        previous_meter = self.meters[0]
+        for meter in self.meters:
+            if math.isclose(measure, meter.measure, abs_tol=0.0001):
+                return meter.numerator, meter.denominator
+            if meter.measure > measure:
                 break
 
-        meter_result = [
-            meter
-            for meter in self.meters
-            if math.isclose(meter.measure, previous_measure, abs_tol=0.0001)
-        ]
+            previous_meter = meter
 
-        return meter_result[0].numerator, meter_result[0].denominator
+        return previous_meter.numerator, previous_meter.numerator
+
+    def del_meter(self, measure: float, decrement: bool = True):
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
+        meters = [
+            x for x in self.meters if math.isclose(x.measure, measure, abs_tol=0.0001)
+        ]
+        for x in meters:
+            self.meters.remove(x)
 
     def add_tap(
         self,
@@ -282,6 +300,7 @@ class MaiMa2:
         is_break: bool = False,
         is_star: bool = False,
         is_ex: bool = False,
+        decrement: bool = True,
     ) -> None:
         """Adds a tap note to the list of notes.
 
@@ -294,6 +313,7 @@ class MaiMa2:
             is_break: Whether a tap note is a break note.
             is_star: Whether a tap note is a star note.
             is_ex: Whether a tap note is an ex note.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a regular tap note at measure 1, break tap note at
@@ -308,6 +328,9 @@ class MaiMa2:
             >>> ma2.add_tap(3, 7, is_star=True)
             >>> ma2.add_tap(5, 7, is_break=True, is_star=True)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         tap_note = TapNote(
             measure=measure,
             position=position,
@@ -331,12 +354,13 @@ class MaiMa2:
 
         self.notes.append(tap_note)
 
-    def del_tap(self, measure: float, position: int) -> None:
+    def del_tap(self, measure: float, position: int, decrement: bool = True) -> None:
         """Deletes a tap note from the list of notes.
 
         Args:
             measure: Time when the note starts, in terms of measures.
             position: Button where the tap note happens.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Create a break tap note at measure 26.75 at button 4. Then delete it.
@@ -345,11 +369,14 @@ class MaiMa2:
             >>> ma2.add_tap(26.75, 4, is_break=True)
             >>> ma2.del_tap(26.75, 4)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         tap_notes = [
             x
             for x in self.notes
             if isinstance(x, TapNote)
-            and x.measure == measure
+            and math.isclose(x.measure, measure, abs_tol=0.0001)
             and x.position == position
         ]
         for note in tap_notes:
@@ -375,7 +402,12 @@ class MaiMa2:
                 self.notes_stat["TAP"] -= 1
 
     def add_hold(
-        self, measure: float, position: int, duration: float, is_ex: bool = False
+        self,
+        measure: float,
+        position: int,
+        duration: float,
+        is_ex: bool = False,
+        decrement: bool = True,
     ) -> None:
         """Adds a hold note to the list of notes.
 
@@ -387,6 +419,7 @@ class MaiMa2:
             position: Button where the hold note happens.
             duration: Total time duration of the hold note.
             is_ex: Whether a hold note is an ex note.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a regular hold note at button 2 at measure 1, with
@@ -397,6 +430,9 @@ class MaiMa2:
             >>> ma2.add_hold(1, 2, 5)
             >>> ma2.add_hold(3, 6, 0.5, is_ex=True)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         hold_note = HoldNote(measure, position, duration, is_ex)
 
         if is_ex:
@@ -406,13 +442,14 @@ class MaiMa2:
 
         self.notes.append(hold_note)
 
-    def del_hold(self, measure: float, position: int) -> None:
+    def del_hold(self, measure: float, position: int, decrement: bool = True) -> None:
         """Deletes the matching hold note in the list of notes. If there are multiple
         matches, all matching notes are deleted. If there are no match, nothing happens.
 
         Args:
             measure: Time when the note starts, in terms of measures.
             position: Button where the hold note happens.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a regular hold note at button 0 at measure 3.25 with duration of 2 measures
@@ -422,11 +459,14 @@ class MaiMa2:
             >>> ma2.add_hold(3.25, 0, 2)
             >>> ma2.del_hold(3.25, 0)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         hold_notes = [
             x
             for x in self.notes
             if isinstance(x, HoldNote)
-            and x.measure == measure
+            and math.isclose(x.measure, measure, abs_tol=0.0001)
             and x.position == position
         ]
         for note in hold_notes:
@@ -445,6 +485,7 @@ class MaiMa2:
         duration: float,
         pattern: int,
         delay: float = 0.25,
+        decrement: bool = True,
     ) -> None:
         """Adds a slide note to the list of notes.
 
@@ -462,6 +503,7 @@ class MaiMa2:
                       measures.
             delay: Time duration of when the slide appears and when it
                    starts to move, in terms of measures.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add an SUL at measure 2.5 from button 1 to 5, with a duration
@@ -470,6 +512,9 @@ class MaiMa2:
             >>> ma2 = MaiMa2()
             >>> ma2.add_slide(2.5, 1, 5, 0.5, 5)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         slide_note = SlideNote(
             measure,
             start_position,
@@ -481,12 +526,21 @@ class MaiMa2:
         self.notes_stat["SLD"] += 1
         self.notes.append(slide_note)
 
-    def del_slide(self, measure: float, start_position: int, end_position: int) -> None:
+    def del_slide(
+        self,
+        measure: float,
+        start_position: int,
+        end_position: int,
+        decrement: bool = True,
+    ) -> None:
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         slide_notes = [
             x
             for x in self.notes
             if isinstance(x, SlideNote)
-            and x.measure == measure
+            and math.isclose(x.measure, measure, abs_tol=0.0001)
             and x.position == start_position
             and x.end_position == end_position
         ]
@@ -502,6 +556,7 @@ class MaiMa2:
         region: str,
         is_firework: bool = False,
         size: str = "M1",
+        decrement: bool = True,
     ) -> None:
         """Adds a touch tap note to the list of notes.
 
@@ -515,6 +570,7 @@ class MaiMa2:
             is_firework: Whether a touch tap note will produce
                          fireworks. Optional bool, defaults to False.
             size: Optional str. Defaults to "M1"
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a touch tap at measure 0.75 at B1 with fireworks.
@@ -522,16 +578,24 @@ class MaiMa2:
             >>> ma2 = MaiMa2()
             >>> ma2.add_touch_tap(0.75, 1, "B", is_firework=True)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         touch_tap = TouchTapNote(measure, position, region, is_firework, size)
         self.notes_stat["TTP"] += 1
         self.notes.append(touch_tap)
 
-    def del_touch_tap(self, measure: float, position: int, region: str) -> None:
+    def del_touch_tap(
+        self, measure: float, position: int, region: str, decrement: bool = True
+    ) -> None:
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         touch_taps = [
             x
             for x in self.notes
             if isinstance(x, TouchTapNote)
-            and x.measure == measure
+            and math.isclose(x.measure, measure, abs_tol=0.0001)
             and x.position == position
             and x.region == region
         ]
@@ -547,6 +611,7 @@ class MaiMa2:
         duration: float,
         is_firework: bool = False,
         size: str = "M1",
+        decrement: bool = True,
     ) -> None:
         """Adds a touch hold note to the list of notes.
 
@@ -561,6 +626,7 @@ class MaiMa2:
             is_firework: Whether a touch hold note will produce
                          fireworks. Optional bool, defaults to False.
             size: Optional str. Defaults to "M1"
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a touch hold at measure 2 at C0 with duration of
@@ -569,18 +635,26 @@ class MaiMa2:
             >>> ma2 = MaiMa2()
             >>> ma2.add_touch_hold(2, 0, "C", 2, is_firework=True)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         touch_tap = TouchHoldNote(
             measure, position, region, duration, is_firework, size
         )
         self.notes_stat["THO"] += 1
         self.notes.append(touch_tap)
 
-    def del_touch_hold(self, measure: float, position: int, region: str) -> None:
+    def del_touch_hold(
+        self, measure: float, position: int, region: str, decrement: bool = True
+    ) -> None:
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         touch_holds = [
             x
             for x in self.notes
             if isinstance(x, TouchHoldNote)
-            and x.measure == measure
+            and math.isclose(x.measure, measure, abs_tol=0.0001)
             and x.position == position
             and x.region == region
         ]
@@ -626,38 +700,30 @@ class MaiMa2:
         Raises:
             Exception: If there are no BPM events defined.
         """
-        self.notes.sort()
-        last_measure = self.notes[-1].measure
-        measure_list = [bpm.measure for bpm in self.bpms]
-        if len(measure_list) == 0:
-            raise Exception("No BPMs defined.")
+        if len(self.bpms) == 0:
+            raise ValueError("No BPMs defined.")
 
-        measure_list.sort()
+        self.bpms.sort(key=lambda x: x.measure)
         bpm_list = [bpm.bpm for bpm in self.bpms]
-        try:
-            starting_bpm = self.get_bpm(0.0)
-        except RuntimeError:
-            starting_bpm = self.get_bpm(1.0)
 
+        starting_bpm = self.get_bpm(0.0, decrement=False)
         mode_bpm = starting_bpm
         highest_bpm = max(bpm_list)
         lowest_bpm = min(bpm_list)
-        bpm_duration = {starting_bpm: 0.0}
 
-        for i, _ in enumerate(measure_list):
-            bpm = bpm_list[i]
-            if i == len(measure_list) - 1:
-                duration = last_measure - measure_list[i]
+        bpm_duration = defaultdict(lambda: 0.0)
+
+        last_measure = max([note.measure for note in self.notes])
+        for i, bpm in enumerate(self.bpms):
+            current_measure = bpm.measure
+            bpm_value = bpm.bpm
+            if i == len(self.bpms) - 1:
+                bpm_duration[bpm_value] += last_measure - current_measure
             else:
-                duration = measure_list[i + 1] - measure_list[i]
+                bpm_duration[bpm_value] += self.bpms[i + 1].measure - current_measure
 
-            if bpm in bpm_duration:
-                bpm_duration[bpm] += duration
-            else:
-                bpm_duration[bpm] = duration
-
-            if bpm_duration[bpm] > bpm_duration[mode_bpm]:
-                mode_bpm = bpm
+            if bpm_duration[bpm_value] > bpm_duration[mode_bpm]:
+                mode_bpm = bpm_value
 
         return starting_bpm, mode_bpm, highest_bpm, lowest_bpm
 
@@ -672,20 +738,13 @@ class MaiMa2:
         """
         bpms = self.get_bpm_statistic()
         try:
-            starting_meter = self.get_meter(0.0)
-        except ValueError:
-            try:
-                starting_meter = self.get_meter(1.0)
-            except ValueError:
-                print("Warning: No starting meter. Assuming 4/4")
-                meter_num = 4
-                meter_den = 4
-            else:
-                meter_num = starting_meter[0]
-                meter_den = starting_meter[1]
-        else:
+            starting_meter = self.get_meter(0.0, decrement=False)
             meter_num = starting_meter[0]
             meter_den = starting_meter[1]
+        except ValueError:
+            print("Warning: No starting meter defined. Assuming 4 4")
+            meter_num = 4
+            meter_den = 4
 
         result = f"VERSION\t0.00.00\t{MA2_VERSION}\n"
         result += f"FES_MODE\t{1 if self.fes_mode else 0}\n"
@@ -694,30 +753,8 @@ class MaiMa2:
         )
         result += f"MET_DEF\t{meter_num}\t{meter_den}\n"
         result += f"RESOLUTION\t{resolution}\n"
-        result += f"CLK_DEF\t{self.click_res}\n"
+        result += f"CLK_DEF\t{resolution}\n"
         result += "COMPATIBLE_CODE\tMA2\n"
-
-        return result
-
-    def get_breakdown(self, resolution: int) -> str:
-        """Prints all BPM and MET events in chronological order.
-
-        Returns:
-            A multiline string. Each line
-            contains information about every BPM and Meter events
-            defined.
-        """
-        bpms = self.bpms
-        bpms.sort(key=lambda x: x.measure)
-        meters = self.meters
-        meters.sort(key=lambda x: x.measure)
-
-        result = ""
-        for bpm in bpms:
-            result += bpm.to_str(resolution=resolution)
-
-        for meter in meters:
-            result += meter.to_str(resolution=resolution)
 
         return result
 
@@ -810,14 +847,19 @@ class MaiMa2:
             string is a complete and functioning ma2 text and should
             be stored as-is in a text file with a .ma2 file extension.
         """
+        # Header
         result = self.get_header(resolution=resolution)
         result += "\n"
-        result += self.get_breakdown(resolution=resolution)
+
+        # BPM and meters
+        self.bpms.sort(key=lambda x: x.measure)
+        result += "\n".join([bpm.to_str(resolution) for bpm in self.bpms])
+        self.meters.sort(key=lambda x: x.measure)
+        result += "\n".join([meter.to_str(resolution) for meter in self.meters])
         result += "\n"
 
         self.notes.sort()
-        for note in self.notes:
-            result += note.to_str(resolution=resolution)
+        result += "\n".join([note.to_str(resolution=resolution) for note in self.notes])
 
         result += "\n"
         result += self.get_epilog()

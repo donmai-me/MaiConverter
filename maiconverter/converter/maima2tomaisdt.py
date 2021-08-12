@@ -2,8 +2,8 @@ from typing import Union, Callable, Sequence
 import copy
 
 from ..event import MaiNote, NoteType
-from ..maisdt import (
-    MaiSdt,
+from ..maisxt import (
+    MaiSxt,
     HoldNote as SDTHoldNote,
     SlideStartNote as SDTSlideStartNote,
 )
@@ -27,7 +27,7 @@ ma2_slide_dict = {
 
 
 def _default_touch_converter(
-    sdt: MaiSdt, touch_note: Union[TouchTapNote, TouchHoldNote]
+    sdt: MaiSxt, touch_note: Union[TouchTapNote, TouchHoldNote]
 ) -> None:
     if isinstance(touch_note, TouchTapNote) and touch_note.region == "C":
         sdt.add_tap(measure=touch_note.measure, position=0)
@@ -42,12 +42,12 @@ def _default_touch_converter(
 def ma2_to_sdt(
     ma2: MaiMa2,
     touch_converter: Callable[
-        [MaiSdt, Union[TouchTapNote, TouchHoldNote]], None
+        [MaiSxt, Union[TouchTapNote, TouchHoldNote]], None
     ] = _default_touch_converter,
     convert_touch: bool = False,
-) -> MaiSdt:
+) -> MaiSxt:
     initial_bpm = ma2.get_bpm(0)
-    sdt = MaiSdt(bpm=initial_bpm)
+    sdt = MaiSxt(bpm=initial_bpm)
     convert_notes(sdt, ma2.notes, touch_converter, convert_touch)
     sdt.notes.sort()
 
@@ -73,9 +73,9 @@ def ma2_to_sdt(
 
 
 def convert_notes(
-    sdt: MaiSdt,
+    sdt: MaiSxt,
     ma2_notes: Sequence[MaiNote],
-    touch_converter: Callable[[MaiSdt, Union[TouchTapNote, TouchHoldNote]], None],
+    touch_converter: Callable[[MaiSxt, Union[TouchTapNote, TouchHoldNote]], None],
     convert_touch: bool,
 ) -> None:
     skipped_notes = 0

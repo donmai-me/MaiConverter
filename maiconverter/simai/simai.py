@@ -37,7 +37,7 @@ class SimaiChart:
         ] = []
         self.bpms: List[BPM] = []
         self._divisor: Optional[float] = None
-        self._measure = 1.0
+        self._measure = 0.0
 
     @classmethod
     def from_str(cls, chart_text: str, message: Optional[str] = None) -> SimaiChart:
@@ -145,7 +145,8 @@ class SimaiChart:
                     delay = 0.25
                     if equivalent_bpm is not None:
                         multiplier = (
-                            simai_chart.get_bpm(simai_chart._measure) / equivalent_bpm
+                            simai_chart.get_bpm(simai_chart._measure + 1)
+                            / equivalent_bpm
                         )
                         duration = multiplier * duration
                         delay = multiplier * delay
@@ -229,6 +230,7 @@ class SimaiChart:
         is_break: bool = False,
         is_star: bool = False,
         is_ex: bool = False,
+        decrement: bool = True,
     ) -> None:
         """Adds a tap note to the list of notes.
 
@@ -238,6 +240,7 @@ class SimaiChart:
             is_break: Whether a tap note is a break note.
             is_star: Whether a tap note is a star note.
             is_ex: Whether a tap note is an ex note.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a regular tap note at measure 1, break tap note at
@@ -252,6 +255,9 @@ class SimaiChart:
             >>> simai.add_tap(3, 7, is_star=True)
             >>> simai.add_tap(5, 7, is_break=True, is_star=True)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         tap_note = TapNote(
             measure=measure,
             position=position,
@@ -261,12 +267,13 @@ class SimaiChart:
         )
         self.notes.append(tap_note)
 
-    def del_tap(self, measure: float, position: int) -> None:
+    def del_tap(self, measure: float, position: int, decrement: bool = True) -> None:
         """Deletes a tap note from the list of notes.
 
         Args:
             measure: Time when the note starts, in terms of measures.
             position: Button where the tap note happens.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Remove tap note at measure 26.75 at button 4.
@@ -274,18 +281,26 @@ class SimaiChart:
             >>> simai.add_tap(26.5, 4)
             >>> simai.del_tap(26.75, 4)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         tap_notes = [
             x
             for x in self.notes
             if isinstance(x, TapNote)
-            and x.measure == measure
+            and math.isclose(x.measure, measure, abs_tol=0.0001)
             and x.position == position
         ]
         for note in tap_notes:
             self.notes.remove(note)
 
     def add_hold(
-        self, measure: float, position: int, duration: float, is_ex: bool = False
+        self,
+        measure: float,
+        position: int,
+        duration: float,
+        is_ex: bool = False,
+        decrement: bool = True,
     ) -> None:
         """Adds a hold note to the list of notes.
 
@@ -294,6 +309,7 @@ class SimaiChart:
             position: Button where the hold note happens.
             duration: Total time duration of the hold note.
             is_ex: Whether a hold note is an ex note.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a regular hold note at button 2 at measure 1, with
@@ -304,16 +320,20 @@ class SimaiChart:
             >>> simai.add_hold(1, 2, 5)
             >>> simai.add_hold(3, 6, 0.5, is_ex=True)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         hold_note = HoldNote(measure, position, duration, is_ex)
         self.notes.append(hold_note)
 
-    def del_hold(self, measure: float, position: int) -> None:
+    def del_hold(self, measure: float, position: int, decrement: bool = True) -> None:
         """Deletes the matching hold note in the list of notes. If there are multiple
         matches, all matching notes are deleted. If there are no match, nothing happens.
 
         Args:
             measure: Time when the note starts, in terms of measures.
             position: Button where the hold note happens.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a regular hold note at button 0 at measure 3.25 with duration of 2 measures
@@ -323,11 +343,14 @@ class SimaiChart:
             >>> simai.add_hold(3.25, 0, 2)
             >>> simai.del_hold(3.25, 0)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         hold_notes = [
             x
             for x in self.notes
             if isinstance(x, HoldNote)
-            and x.measure == measure
+            and math.isclose(x.measure, measure, abs_tol=0.0001)
             and x.position == position
         ]
         for note in hold_notes:
@@ -342,6 +365,7 @@ class SimaiChart:
         pattern: str,
         delay: float = 0.25,
         reflect_position: Optional[int] = None,
+        decrement: bool = True,
     ) -> None:
         """Adds both a slide note to the list of notes.
 
@@ -366,6 +390,9 @@ class SimaiChart:
             >>> simai.add_slide(2.25, 1, 5, 1.5, "-")
             >>> simai.add_slide(3, 2, 7, 0.5, "V", reflect_position=4)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         slide_note = SlideNote(
             measure,
             start_position,
@@ -377,12 +404,21 @@ class SimaiChart:
         )
         self.notes.append(slide_note)
 
-    def del_slide(self, measure: float, start_position: int, end_position: int) -> None:
+    def del_slide(
+        self,
+        measure: float,
+        start_position: int,
+        end_position: int,
+        decrement: bool = True,
+    ) -> None:
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         slide_notes = [
             x
             for x in self.notes
             if isinstance(x, SlideNote)
-            and x.measure == measure
+            and math.isclose(x.measure, measure, abs_tol=0.0001)
             and x.position == start_position
             and x.end_position == end_position
         ]
@@ -390,17 +426,30 @@ class SimaiChart:
             self.notes.remove(note)
 
     def add_touch_tap(
-        self, measure: float, position: int, region: str, is_firework: bool = False
+        self,
+        measure: float,
+        position: int,
+        region: str,
+        is_firework: bool = False,
+        decrement: bool = True,
     ) -> None:
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         touch_tap_note = TouchTapNote(measure, position, region, is_firework)
         self.notes.append(touch_tap_note)
 
-    def del_touch_tap(self, measure: float, position: int, region: str) -> None:
+    def del_touch_tap(
+        self, measure: float, position: int, region: str, decrement: bool = True
+    ) -> None:
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         touch_taps = [
             x
             for x in self.notes
             if isinstance(x, TouchTapNote)
-            and x.measure == measure
+            and math.isclose(x.measure, measure, abs_tol=0.0001)
             and x.position == position
             and x.region == region
         ]
@@ -414,25 +463,34 @@ class SimaiChart:
         region: str,
         duration: float,
         is_firework: bool = False,
+        decrement: bool = True,
     ) -> None:
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         touch_hold_note = TouchHoldNote(
             measure, position, region, duration, is_firework
         )
         self.notes.append(touch_hold_note)
 
-    def del_touch_hold(self, measure: float, position: int, region: str) -> None:
+    def del_touch_hold(
+        self, measure: float, position: int, region: str, decrement: bool = True
+    ) -> None:
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         touch_holds = [
             x
             for x in self.notes
             if isinstance(x, TouchHoldNote)
-            and x.measure == measure
+            and math.isclose(x.measure, measure, abs_tol=0.0001)
             and x.position == position
             and x.region == region
         ]
         for note in touch_holds:
             self.notes.remove(note)
 
-    def set_bpm(self, measure: float, bpm: float) -> None:
+    def set_bpm(self, measure: float, bpm: float, decrement: bool = True) -> None:
         """Sets the bpm at given measure.
 
         Note:
@@ -442,6 +500,7 @@ class SimaiChart:
         Args:
             measure: Time, in measures, where the bpm is defined.
             bpm: The tempo in beat per minutes.
+            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             In a chart, the initial bpm is 180 then changes
@@ -451,11 +510,15 @@ class SimaiChart:
             >>> simai.set_bpm(0, 180)
             >>> simai.set_bpm(12, 250)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
+        self.del_bpm(measure, decrement)
+
         bpm_event = BPM(measure, bpm)
-        self.del_bpm(measure)
         self.bpms.append(bpm_event)
 
-    def get_bpm(self, measure: float) -> float:
+    def get_bpm(self, measure: float, decrement: bool = True) -> float:
         """Gets the bpm at given measure.
 
         Args:
@@ -482,27 +545,25 @@ class SimaiChart:
         """
         if len(self.bpms) == 0:
             raise ValueError("No BPMs defined")
-        if measure < 0:
-            raise ValueError("Measure is negative")
+        if not any([0.0 == x.measure for x in self.bpms]):
+            raise ValueError("No starting BPM defined")
 
-        bpm_measures = [bpm.measure for bpm in self.bpms]
-        bpm_measures = list(set(bpm_measures))
+        if decrement:
+            measure = max(0.0, measure - 1.0)
 
-        if not any([x for x in bpm_measures if 0.0 <= x <= 1.0]):
-            raise ValueError("No starting BPMs defined")
-
-        bpm_measures.sort()
-        previous_measure = 0
-        for bpm_measure in bpm_measures:
-            if bpm_measure <= measure:
-                previous_measure = bpm_measure
-            else:
+        self.bpms.sort(key=lambda x: x.measure)
+        previous_bpm = self.bpms[0].bpm
+        for bpm in self.bpms:
+            if math.isclose(measure, bpm.measure, abs_tol=0.0001):
+                return bpm.bpm
+            if bpm.measure > measure:
                 break
 
-        bpm_result = [bpm.bpm for bpm in self.bpms if bpm.measure == previous_measure]
-        return bpm_result[0]
+            previous_bpm = bpm.bpm
 
-    def del_bpm(self, measure: float):
+        return previous_bpm
+
+    def del_bpm(self, measure: float, decrement: bool = True):
         """Deletes the bpm at given measure.
 
         Note:
@@ -517,6 +578,9 @@ class SimaiChart:
             >>> simai = SimaiChart()
             >>> simai.del_bpm(24)
         """
+        if decrement:
+            measure = max(0.0, measure - 1.0)
+
         bpms = [
             x for x in self.bpms if math.isclose(x.measure, measure, abs_tol=0.0001)
         ]
@@ -548,35 +612,42 @@ class SimaiChart:
     def export(self, max_den: int = 1000) -> str:
         # TODO: Rewrite this
         measures = [event.measure for event in self.notes + self.bpms]
-        measures += [1.0]
 
-        measures.sort()
         measures += [int(i) for i in measures]
+        measures.append(0.0)
+
         measures = list(set(measures))
+        last_whole_measure = max([int(measure) for measure in measures])
         measures.sort()
 
-        last_whole_measure = int(measures[-1])
-        whole_divisors = []
-        for whole_measure in range(1, last_whole_measure + 1):
-            x = [y for y in measures if int(y) == whole_measure]
-            whole_divisors.append(get_measure_divisor(x))
+        # whole_divisors contains divisors that fit perfectly all notes in one measure.
+        # It either contains an integer or None.
+        whole_divisors: List[Union[int, None]] = []
+        for whole_measure in range(last_whole_measure + 1):
+            note_measures = [
+                note_measure
+                for note_measure in measures
+                if int(note_measure) == whole_measure
+            ]
+            whole_divisors.append(get_measure_divisor(note_measures))
 
         # last_measure takes into account slide and hold notes' end measure
-        last_measure = 1.0
+        last_measure = 0.0
         # measure_tick is our time-tracking variable. Used to know what measure
         # are we in-between rests ","
-        measure_tick = 1.0
+        measure_tick = 0.0
         # previous_divisor is used for comparing to current_divisor
         # to know if we should add a "{}" indicator
         previous_divisor: Optional[int] = None
         # previous_measure_int is used for comparing to current measure.
         # If we are in a new whole measure, add a new line and add the divisor.
-        previous_measure_int = 1
+        previous_measure_int = 0
         # Our resulting chart in text form. Assuming that string fits in memory
         result = ""
         for (i, current_measure) in enumerate(measures):
             bpm = [bpm for bpm in self.bpms if bpm.measure == current_measure]
             notes = [note for note in self.notes if note.measure == current_measure]
+
             hold_slides = [
                 note
                 for note in notes
@@ -600,16 +671,9 @@ class SimaiChart:
                         current_measure + hold_slide.duration, last_measure
                     )
 
-            whole_divisor = whole_divisors[int(current_measure) - 1]
+            whole_divisor = whole_divisors[int(current_measure)]
 
-            # Why doesn't Python have a safe list 'get' method
-            next_measure: Optional[float] = (
-                measures[i + 1] if i + 1 < len(measures) else None
-            )
-            after_next_measure: Optional[float] = (
-                measures[i + 2] if i + 2 < len(measures) else None
-            )
-            if next_measure is None:
+            if i == len(measures) - 1:
                 # We are at the end so let's check if there are any
                 # active holds or slides
                 if last_measure > current_measure:
@@ -629,6 +693,13 @@ class SimaiChart:
                     )
                     whole, rest_amount = 0, 0
             else:
+                # Why doesn't Python have a safe list 'get' method
+                next_measure: Optional[float] = (
+                    measures[i + 1] if i + 1 < len(measures) else None
+                )
+                after_next_measure: Optional[float] = (
+                    measures[i + 2] if i + 2 < len(measures) else None
+                )
                 (whole, current_divisor, rest_amount) = get_rest(
                     current_measure,
                     next_measure,
@@ -639,16 +710,14 @@ class SimaiChart:
                     max_den=max_den,
                 )
 
-            if int(measure_tick) > previous_measure_int:
-                result += "\n"
-
             if (
                 previous_divisor != current_divisor
                 or int(measure_tick) > previous_measure_int
             ):
+                result += "\n"
                 result += convert_to_fragment(
                     notes + bpm,
-                    self.get_bpm(current_measure),
+                    self.get_bpm(current_measure + 1),
                     current_divisor,
                     max_den=max_den,
                 )
@@ -656,7 +725,7 @@ class SimaiChart:
                 previous_measure_int = int(measure_tick)
             else:
                 result += convert_to_fragment(
-                    notes + bpm, self.get_bpm(current_measure), max_den=max_den
+                    notes + bpm, self.get_bpm(current_measure + 1), max_den=max_den
                 )
 
             measure_tick = current_measure

@@ -4,22 +4,23 @@ import os.path
 
 from maiconverter.converter import sdt_to_ma2
 from maiconverter.maima2 import MaiMa2, HoldNote, SlideNote, TouchHoldNote
-from maiconverter.maisdt import MaiSdt
+from maiconverter.maisxt import MaiSxt
 from maiconverter.tool import quantise
 
 
+# noinspection PyShadowingNames
 def main():
     parser = argparse.ArgumentParser("sdt to ma2 with bpm changes")
     parser.add_argument("input", type=str)
     parser.add_argument("conform", type=str)
-    parser.add_argument("bpm", type=int)
+    parser.add_argument("bpm", type=float)
     parser.add_argument("--offset", type=str)
     parser.add_argument("--resolution", type=int, default=384)
     parser.add_argument("--quantise", type=int, default=16)
 
     args = parser.parse_args()
 
-    sdt = MaiSdt.open(args.input, args.bpm)
+    sdt = MaiSxt.open(args.input, args.bpm)
     ma2 = sdt_to_ma2(sdt, args.bpm)
     ma2.notes.sort(key=lambda note: note.measure)
 

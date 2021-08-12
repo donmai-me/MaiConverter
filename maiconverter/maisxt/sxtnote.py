@@ -1,7 +1,19 @@
 import math
-from typing import Union
+from typing import Union, Optional
 
+from .sxtchart import SxtChartType
 from ..event import MaiNote, NoteType
+
+srt_note_to_later_note = {
+    # 0 (tap notes) can be star, break star, start slide, or tap note
+    2: 2,
+    4: 3,
+    128: 128,
+}
+
+srt_szt_template = "{:.6f}, {:.6f}, {:.6f}, {:2d}, {:3d}, {:3d}, {:2d},\n"
+sct_template = "{:.4f}, {:.4f}, {:.4f}, {:2d}, {:3d}, {:3d}, {:2d}, {:2d},\n"
+sdt_template = "{:.4f}, {:.4f}, {:.4f}, {:2d}, {:3d}, {:3d}, {:2d}, {:2d}, {:.4f},\n"
 
 
 class TapNote(MaiNote):
@@ -15,7 +27,7 @@ class TapNote(MaiNote):
         """Produces an sdt tap note.
 
         Note:
-            Please use MaiSdt class' add_tap method for adding
+            Please use MaiSxt class' add_tap method for adding
             tap notes.
 
         Args:
@@ -23,7 +35,6 @@ class TapNote(MaiNote):
             position: Button where the tap note happens.
             is_break: Whether a tap note is a break note.
         """
-        measure = round(10000.0 * measure) / 10000.0
         if is_break and is_star:
             super().__init__(measure, position, NoteType.break_star)
             self.amount = 0
@@ -37,6 +48,81 @@ class TapNote(MaiNote):
 
     def __str__(self) -> str:
         return sdt_note_to_str(self)
+
+    def to_str(
+        self,
+        chart_type: SxtChartType,
+        srt_slide_duration: Optional[float] = None,
+        srt_slide_id: Optional[int] = None,
+        srt_slide_pattern: Optional[int] = None,
+        star_slide_amount: Optional[int] = None,
+    ) -> str:
+        measure = math.modf(self.measure)
+        is_star = self.note_type in [NoteType.break_star, NoteType.star]
+
+        if chart_type is SxtChartType.SRT:
+            if self.note_type is NoteType.break_star:
+                print(
+                    "Warning: Converting break star to regular star. Report an issue if SRT supports break stars."
+                )
+
+            if is_star and (
+                srt_slide_duration is None
+                or srt_slide_id is None
+                or srt_slide_pattern is None
+            ):
+                raise ValueError(
+                    "Slide duration, id, or pattern is not given for SRT star note."
+                )
+
+            return srt_szt_template.format(
+                measure[1],
+                measure[0],
+                0.0 if not is_star else srt_slide_duration,
+                self.position,
+                4 if self.note_type is NoteType.break_tap else 0,
+                0 if srt_slide_id is None else srt_slide_id,
+                0 if srt_slide_pattern is None else srt_slide_pattern,
+            )
+        elif chart_type is SxtChartType.SZT:
+            return srt_szt_template.format(
+                measure[1],
+                measure[0],
+                0.0625,
+                self.position,
+                self.note_type.value,
+                0,
+                0,
+            )
+        elif chart_type is SxtChartType.SCT:
+            if is_star and star_slide_amount is None:
+                raise ValueError("No star slide amount given.")
+
+            return sct_template.format(
+                measure[1],
+                measure[0],
+                0.0625,
+                self.position,
+                self.note_type.value,
+                0,
+                0,
+                0 if not is_star else star_slide_amount,
+            )
+        else:
+            if is_star and star_slide_amount is None:
+                raise ValueError("No star slide amount given.")
+
+            return sdt_template.format(
+                measure[1],
+                measure[0],
+                0.0625,
+                self.position,
+                self.note_type.value,
+                0,
+                0,
+                0 if not is_star else star_slide_amount,
+                0.0,
+            )
 
 
 class SlideStartNote(MaiNote):
@@ -52,7 +138,7 @@ class SlideStartNote(MaiNote):
         """Produces an sdt slide start note.
 
         Note:
-            Please use MaiSdt class' add_slide method for adding
+            Please use MaiSxt class' add_slide method for adding
             slide start and slide end.
 
         Args:
@@ -75,7 +161,6 @@ class SlideStartNote(MaiNote):
         if delay < 0:
             raise ValueError("Slide delay is negative " + str(delay))
 
-        measure = round(10000.0 * measure) / 10000.0
         duration = round(10000.0 * duration) / 10000.0
         delay = round(10000.0 * delay) / 10000.0
         super().__init__(measure, position, NoteType.start_slide)
@@ -87,6 +172,8 @@ class SlideStartNote(MaiNote):
     def __str__(self) -> str:
         return sdt_note_to_str(self)
 
+    # def to_str(self, slide_delay: float):
+
 
 class SlideEndNote(MaiNote):
     def __init__(
@@ -95,7 +182,7 @@ class SlideEndNote(MaiNote):
         """Produces an sdt slide end note.
 
         Note:
-            Please use MaiSdt class' add_slide method for adding
+            Please use MaiSxt class' add_slide method for adding
             slide start and slide end.
 
         Args:
@@ -124,7 +211,7 @@ class HoldNote(MaiNote):
         """Produces an sdt hold note.
 
         Note:
-            Please use MaiSdt class' add_hold method for adding
+            Please use MaiSxt class' add_hold method for adding
             hold notes.
 
         Args:
@@ -155,7 +242,7 @@ def sdt_note_to_str(
     Returns:
         A single line string.
     """
-    measure = math.modf(note.measure)
+    measure = math.modf(note.measure + 1.0)
     note_type = note.note_type
     if isinstance(note, (HoldNote, SlideStartNote)):
         note_duration = note.duration
@@ -180,9 +267,7 @@ def sdt_note_to_str(
         slide_amount = 0
 
     delay = 0.0 if not isinstance(note, SlideStartNote) else note.delay
-    line_template = (
-        "{:.4f}, {:.4f}, {:.4f}, {:2d}, {:3d}, {:3d}, {:2d}, {:2d}, {:.4f},\n"
-    )
+    line_template = "{:.4f}, {:.4f}, {:.4f}, {:2d}, {:3d}, {:3d}, {:2d}, {:2d}, {:.4f},"
     result = line_template.format(
         measure[1],
         measure[0],

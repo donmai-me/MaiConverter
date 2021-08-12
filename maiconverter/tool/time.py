@@ -5,21 +5,18 @@ from typing import List, Tuple, Union, Callable
 def _check_bpms(bpms: List[Tuple[float, float]]):
     if len(bpms) == 0:
         raise ValueError("No BPMs given.")
-    if not any([0.0 <= x[0] <= 1.0 for x in bpms]):
+    if not any([0.0 == x[0] for x in bpms]):
         raise ValueError("No starting BPM defined.")
 
 
 def measure_to_second(measure: float, bpms: List[Tuple[float, float]]) -> float:
-    if measure == 1.0:
-        return 0.0
-
     _check_bpms(bpms)
     bpms.sort(key=lambda x: x[0])
 
     if measure < 0.0:
         return 60 * 4 * measure / bpms[0][1]
 
-    previous_measure = 1.0
+    previous_measure = 0.0
     previous_bpm = bpms[0][1]
     previous_time = 0.0
     for current_measure, current_bpm in bpms:
@@ -43,9 +40,6 @@ def measure_to_second(measure: float, bpms: List[Tuple[float, float]]) -> float:
 
 
 def second_to_measure(seconds: float, bpms: List[Tuple[float, float]]) -> float:
-    if seconds == 0.0:
-        return 1.0
-
     _check_bpms(bpms)
     bpms.sort(key=lambda x: x[0])
 
