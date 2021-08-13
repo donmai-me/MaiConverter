@@ -340,6 +340,10 @@ class MaiSxt:
                 behaviour will raise a ValueError instead.
             decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
+        Raises:
+            ValueError: When a slide is invalid and crashes the game (Can be disabled by setting check_slide to False.)
+                When fail_on_undefined is True and given a slide with undefined behaviour.
+
         Examples:
             Add a slide at measure 2 from button 6 to button 3 with
             duration of 1.75 measures, delay of 0.25 measures,
