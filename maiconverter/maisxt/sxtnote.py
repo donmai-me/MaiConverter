@@ -280,3 +280,112 @@ def sdt_note_to_str(
         delay,
     )
     return result
+
+
+def is_slide_valid(
+    pattern: int,
+    start_position: int,
+    end_position: int,
+    fail_on_undefined: bool = False,
+    chart_type: SxtChartType = SxtChartType.SDT,
+) -> bool:
+    """Function that checks a slide if it's valid. Will raise a ValueError if given
+    a slide that will crash the game.
+
+    Will return False for slides that has undefined behaviour but will not crash
+    the game, and True for valid slides. Unless fail_on_undefined is set to True.
+
+    Args:
+        pattern: The slide pattern of a slide. Should be ints corresponding to slides from SZT and later.
+        start_position: The button where a slide begins.
+        end_position: The button where a slide ends.
+        fail_on_undefined: Optional bool defaults to False. When True, slides with undefined
+            behaviour will raise a ValueError instead.
+        chart_type: Optional chart type. Used only for checking SRT slides.
+
+    Raises:
+        ValueError: When given a slide that will crash the game, or has undefined
+            behaviour when fail_on_undefined is set to True.
+    """
+    if not (0 <= start_position <= 7):
+        raise ValueError(f"Invalid start position {start_position}")
+    if not (0 <= end_position <= 7):
+        raise ValueError(f"Invalid end position {end_position}")
+    if chart_type is SxtChartType.SRT and not (1 <= pattern <= 3):
+        raise ValueError(f"Invalid pattern for SRT chart {pattern}")
+    if chart_type is not SxtChartType.SRT and not (1 <= pattern <= 13):
+        raise ValueError(f"Invalid pattern for non-SRT chart {pattern}")
+
+    # Helper variables
+    if end_position > start_position:
+        distance_cw = abs(end_position - start_position)
+        distance_ccw = abs((start_position + 8) - end_position)
+    else:
+        distance_cw = abs((end_position + 8) - start_position)
+        distance_ccw = abs(start_position - end_position)
+
+    opposite = start_position + 4
+    opposite %= 8
+
+    if pattern == 1:
+        # Straight slide's end position should at least be two places away
+        if start_position == end_position:
+            if fail_on_undefined:
+                raise ValueError("Start and end position are equal in pattern 1")
+
+            return False
+
+        return distance_cw >= 2 or distance_ccw >= 2
+    elif pattern == 2 and chart_type is SxtChartType.SRT:
+        # CCW around the judgement ring in SRT can only do 3 places max
+        if not distance_ccw <= 3:
+            if fail_on_undefined:
+                raise ValueError(
+                    "SRT can only do distances of 3 places max in pattern 2"
+                )
+
+            return False
+    elif pattern == 3 and chart_type is SxtChartType.SRT:
+        # CW around the judgement ring in SRT can only do 3 places max
+        if not distance_cw <= 3:
+            if fail_on_undefined:
+                raise ValueError(
+                    "SRT can only do distances of 3 places max in pattern 3"
+                )
+
+            return False
+    elif pattern in [6, 7] and end_position != opposite:
+        # Zigzags end_position should be opposite of start_position
+        if fail_on_undefined:
+            raise ValueError(
+                "End position is not opposite of start position in pattern 6 or 7"
+            )
+
+        return False
+    elif pattern == 11:
+        if start_position == end_position:
+            raise ValueError(f"Start and end position are equal in pattern 11")
+
+        if not distance_ccw >= 4:
+            if fail_on_undefined:
+                raise ValueError(f"CCW distance is less than 4 in pattern 11")
+
+            return False
+    elif pattern == 12:
+        if start_position == end_position:
+            raise ValueError(f"Start and end position are equal in pattern 12")
+
+        if not distance_cw >= 4:
+            if fail_on_undefined:
+                raise ValueError(f"CW distance is less than 4 in pattern 12")
+
+            return False
+    elif pattern == 13 and end_position != opposite:
+        if fail_on_undefined:
+            raise ValueError(
+                "End position is not opposite of start position in pattern 13"
+            )
+
+        return False
+
+    return True

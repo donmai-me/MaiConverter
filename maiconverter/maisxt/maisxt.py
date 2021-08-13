@@ -4,7 +4,13 @@ import math
 import re
 from typing import Union, List, Dict
 
-from .sxtnote import TapNote, HoldNote, SlideStartNote, SlideEndNote
+from .sxtnote import (
+    TapNote,
+    HoldNote,
+    SlideStartNote,
+    SlideEndNote,
+    is_slide_valid,
+)
 from ..event import NoteType
 from ..tool import measure_to_second, second_to_measure
 
@@ -313,6 +319,8 @@ class MaiSxt:
         duration: float,
         pattern: int,
         delay: float = 0.25,
+        check_slide: bool = True,
+        fail_on_undefined: bool = False,
         decrement: bool = True,
     ) -> None:
         """Adds both a start slide and end slide note to the list of notes.
@@ -327,6 +335,9 @@ class MaiSxt:
             pattern: Numerical representation of the slide pattern.
             delay: Duration from when the slide appears and when it
                 starts to move, in terms of measures. Defaults to 0.25.
+            check_slide: When set to true, will check validity of slides.
+            fail_on_undefined: Optional bool defaults to False. When True, slides with undefined
+                behaviour will raise a ValueError instead.
             decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
@@ -337,6 +348,11 @@ class MaiSxt:
             >>> sxt = MaiSxt()
             >>> sxt.add_slide(2, 6, 3, 1.75, 1)
         """
+        if check_slide and not is_slide_valid(
+            pattern, start_position, end_position, fail_on_undefined
+        ):
+            print(f"Warning: Adding slide with undefined behaviour.")
+
         if decrement:
             measure = max(0.0, measure - 1.0)
 
