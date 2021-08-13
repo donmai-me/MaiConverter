@@ -5,14 +5,14 @@ A Python program for parsing and converting Maimai charts. Made up of two parts:
 
 If you're not familiar with these file formats, then you can read about sdt files [here](https://listed.to/@donmai/18173/the-four-chart-formats-of-maimai-classic) and simai files [here](https://w.atwiki.jp/simai/pages/25.html). You can read about my blog post about this [here](https://listed.to/@donmai/18284/newly-released-simai-to-sdt-converter)
 
-If you're interested in anything maimai modding related, then go join [MaiMai TEA](https://discord.gg/82UR3e2akE) in Discord.
+If you're interested in anything MaiMai modding related, then go join [MaiMai TEA](https://discord.gg/82UR3e2akE) in Discord.
 
 # Dependencies 
 * [Pycryptodome](https://pypi.org/project/pycryptodome)
 * [Lark](https://pypi.org/project/lark-parser)
 
 # Commandline
-The command-line script, installed as part of the package, can parse, convert, encrypt, or decrypt Maimai chart formats. The general form is:
+The command-line script, installed as part of the package, can parse, convert, encrypt, or decrypt MaiMai chart formats. The general form is:
 
 ```maiconverter COMMAND /path/to/file/or/directory```
 
@@ -108,7 +108,7 @@ If you installed the wheel file, you could import the program like a standard Py
 * Reduce jank
 
 # Contact
-If you have questions or bug reports, send me a DM or ping me at MaiTea Discord server.
+If you have questions or bug reports and for some reason you don't want to make an issue at GitHub, send me a DM or ping me at MaiTea Discord server.
 
 * Discord: donmai#1493
 * Twitter: @donmai_me
