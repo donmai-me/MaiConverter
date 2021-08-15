@@ -1,6 +1,7 @@
 from typing import Optional, Tuple
 
 from ..event import Event, EventType, SimaiNote, NoteType
+from ..tool import slide_distance, slide_is_cw
 
 
 # For straightforward slide pattern conversion from simai to sxt/ma2.
