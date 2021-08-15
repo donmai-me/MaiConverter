@@ -46,7 +46,7 @@ def second_to_measure(seconds: float, bpms: List[Tuple[float, float]]) -> float:
     if seconds < 0.0:
         return seconds * bpms[0][1] / (60 * 4)
 
-    previous_measure = 1.0
+    previous_measure = 0.0
     previous_time = 0.0
     previous_bpm = bpms[0][1]
     for current_measure, current_bpm in bpms:

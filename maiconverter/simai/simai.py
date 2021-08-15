@@ -610,7 +610,7 @@ class SimaiChart:
             bpm.measure = round(bpm.measure + offset, 4)
 
     def measure_to_second(self, measure: float, decrement: bool = True) -> float:
-        if decrement:
+        if decrement and measure > 0.0:
             measure = max(0.0, measure - 1.0)
 
         bpms = [(bpm.measure, bpm.bpm) for bpm in self.bpms]
@@ -621,7 +621,7 @@ class SimaiChart:
         bpms = [(bpm.measure, bpm.bpm) for bpm in self.bpms]
         measure = second_to_measure(seconds, bpms)
 
-        if increment:
+        if increment and measure >= 0.0:
             measure += 1.0
 
         return measure

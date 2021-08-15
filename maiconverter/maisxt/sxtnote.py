@@ -49,6 +49,7 @@ class TapNote(MaiNote):
 
     def __str__(self) -> str:
         return sdt_note_to_str(self)
+        # return self.to_str(SxtChartType.SDT)
 
     def to_str(
         self,
@@ -56,8 +57,9 @@ class TapNote(MaiNote):
         srt_slide_duration: Optional[float] = None,
         srt_slide_id: Optional[int] = None,
         srt_slide_pattern: Optional[int] = None,
-        star_slide_amount: Optional[int] = None,
     ) -> str:
+        raise NotImplementedError
+
         measure = math.modf(self.measure)
         is_star = self.note_type in [NoteType.break_star, NoteType.star]
 
@@ -96,9 +98,6 @@ class TapNote(MaiNote):
                 0,
             )
         elif chart_type is SxtChartType.SCT:
-            if is_star and star_slide_amount is None:
-                raise ValueError("No star slide amount given.")
-
             return sct_template.format(
                 measure[1],
                 measure[0],
@@ -107,12 +106,9 @@ class TapNote(MaiNote):
                 self.note_type.value,
                 0,
                 0,
-                0 if not is_star else star_slide_amount,
+                0 if not is_star else self.amount,
             )
         else:
-            if is_star and star_slide_amount is None:
-                raise ValueError("No star slide amount given.")
-
             return sdt_template.format(
                 measure[1],
                 measure[0],
@@ -121,7 +117,7 @@ class TapNote(MaiNote):
                 self.note_type.value,
                 0,
                 0,
-                0 if not is_star else star_slide_amount,
+                0 if not is_star else self.amount,
                 0.0,
             )
 

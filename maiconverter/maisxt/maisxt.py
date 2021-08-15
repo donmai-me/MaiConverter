@@ -459,14 +459,14 @@ class MaiSxt:
             note.measure = round((note.measure + offset) * 10000.0) / 10000.0
 
     def measure_to_second(self, measure: float, decrement: bool = True) -> float:
-        if decrement:
+        if decrement and measure > 0.0:
             measure = max(0.0, measure - 1.0)
 
         return measure_to_second(measure, [(0.0, self.bpm)])
 
     def second_to_measure(self, seconds: float, increment: bool = True) -> float:
         measure = second_to_measure(seconds, [(0.0, self.bpm)])
-        if increment:
+        if increment and measure >= 0.0:
             measure += 1.0
 
         return measure
