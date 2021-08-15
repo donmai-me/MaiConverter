@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed all conversion functions that mentions sdt to sxt.
 - MaiSxt constructor now requires BPM.
 - Conversion functions that converts from MaiSxt no longer accepts initial_bpm parameter.
-- MaiSxt add_slide now checks for validity of slide with an optional toggle to disable checks and a toggle to raise errors on slides with undefined behaviour.
+- MaiSxt and MaiMa2 add_slide now checks for validity of slide with an optional toggle to disable checks.
 - Encryption and decryption methods now only accept raw bytes.
 - MaiMa2 resolution moved from being an attribute to a parameter in export method.
 - Migrated changelog format to keep a changelog and remove entries from unreleased versions.

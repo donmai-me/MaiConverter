@@ -1,3 +1,3 @@
 from .maisxt import MaiSxt
-from .sxtnote import TapNote, SlideStartNote, SlideEndNote, HoldNote, is_slide_valid
+from .sxtnote import TapNote, SlideStartNote, SlideEndNote, HoldNote, check_slide
 from .sxtchart import SxtChartType

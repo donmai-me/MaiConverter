@@ -6,6 +6,8 @@ from ..event import MaiNote, NoteType, Event, EventType
 # Dictionary for a note type's representation in ma2
 # Does not cover slide notes, BPM, and meter events.
 # Use slide_dict for slides instead.
+from ..tool import slide_distance
+
 note_dict = {
     "TAP": 1,
     "HLD": 2,
@@ -427,3 +429,51 @@ def measure_to_ma2_time(measure: float, resolution: int) -> Tuple[int, int]:
     decimal_part = round(decimal_part * resolution)
 
     return int(whole_part), decimal_part
+
+
+def check_slide(pattern: int, start_position: int, end_position: int):
+    """Function that checks a slide if it's valid. Will raise a ValueError if given
+    a slide that will crash the game or has undefined behaviour.
+
+    Args:
+        pattern: The slide pattern of a slide.
+        start_position: The button where a slide begins.
+        end_position: The button where a slide ends.
+
+    Raises:
+        ValueError: When given a slide that will crash the game or has undefined
+            behaviour.
+    """
+    if not (0 < pattern < 14):
+        raise ValueError(f"Invalid slide pattern {pattern}")
+    if not (0 <= start_position <= 7):
+        raise ValueError(f"Invalid start position {start_position}")
+    if not (0 <= end_position <= 7):
+        raise ValueError(f"Invalid end position {end_position}")
+
+    distance_cw = slide_distance(start_position, end_position, is_cw=True)
+    distance_ccw = slide_distance(start_position, end_position, is_cw=False)
+
+    if pattern == 1:
+        if not (distance_cw > 1 and distance_ccw > 1):
+            raise ValueError(
+                "Distance between start and end position must be greater than 1 in SI_."
+            )
+    elif pattern in [6, 7, 13]:
+        if distance_cw != 4:
+            raise ValueError(
+                "Start and end position must be opposite of each other in SSL, SSR, or SF_."
+            )
+    elif pattern == 8:
+        if start_position == end_position:
+            raise ValueError(
+                "Start and end position must not be equal to each other in SV_."
+            )
+    elif pattern == 11:
+        if not 0 < distance_cw < 5:
+            raise ValueError("Clockwise distance must be between 0 and 5 in SLL.")
+    elif pattern == 12:
+        if not 0 < distance_ccw < 5:
+            raise ValueError(
+                "Counter-clockwise distance must be between 0 and 5 in SLR."
+            )

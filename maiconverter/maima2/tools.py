@@ -53,7 +53,7 @@ def parse_v1(ma2, values: List[str]) -> None:
         return
     if line_type == "RESOLUTION":
         # Set the max number of ticks in a measure
-        ma2.resolution = int(values[1])
+        ma2._resolution = int(values[1])
     elif line_type == "BPM":
         # Set the BPM for a measure
         measure = float(values[1]) + float(values[2]) / ma2.resolution

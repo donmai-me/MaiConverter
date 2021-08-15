@@ -116,7 +116,7 @@ class SlideNote(SimaiNote):
             raise ValueError("Duration is not positive " + str(duration))
         if delay < 0:
             raise ValueError("Delay is negative " + str(duration))
-        if not pattern in slide_patterns:
+        if pattern not in slide_patterns:
             raise ValueError("Unknown slide pattern " + str(pattern))
         if pattern == "V" and reflect_position is None:
             raise Exception("Slide pattern 'V' is given " + "without reflection point")
@@ -169,37 +169,6 @@ class BPM(Event):
         self.bpm = bpm
 
 
-def slide_distance(start_position: int, end_position: int, is_cw: bool) -> int:
-    end = end_position
-    start = start_position
-    if is_cw:
-        if start >= end:
-            end += 8
-
-        return end - start
-    else:
-        if start <= end:
-            start += 8
-
-        return start - end
-
-
-def slide_is_cw(start_position: int, end_position: int) -> bool:
-    # Handles slide cases where the direction is not specified
-    # Returns True for clockwise and False for counterclockwise
-    diff = abs(end_position - start_position)
-    other_diff = abs(8 - diff)
-    if diff == 4:
-        raise ValueError("Can't choose direction for a 180 degree angle.")
-
-    if (end_position > start_position and diff > other_diff) or (
-        end_position < start_position and diff < other_diff
-    ):
-        return False
-    else:
-        return True
-
-
 def slide_to_pattern_str(slide_note: SlideNote) -> str:
     pattern = slide_note.pattern
     if pattern != "V":
@@ -217,7 +186,7 @@ def pattern_from_int(
     top_list = [0, 1, 6, 7]
     inv_slide_dict = {v: k for k, v in slide_dict.items()}
     dict_result = inv_slide_dict.get(pattern)
-    if not dict_result is None:
+    if dict_result is not None:
         return dict_result, None
     elif pattern in [2, 3]:
         # Have I told you how much I hate the simai format?

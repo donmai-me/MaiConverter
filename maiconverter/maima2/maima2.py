@@ -12,6 +12,7 @@ from .ma2note import (
     TouchHoldNote,
     BPM,
     Meter,
+    check_slide,
 )
 from .tools import parse_v1
 from ..event import NoteType
@@ -67,7 +68,6 @@ class MaiMa2:
         self.notes: List[
             Union[TapNote, HoldNote, SlideNote, TouchTapNote, TouchHoldNote]
         ] = []
-        self.version = ("0.00.00", version)
         self.notes_stat = {
             "TAP": 0,
             "BRK": 0,
@@ -81,6 +81,10 @@ class MaiMa2:
             "THO": 0,
             "SLD": 0,
         }
+
+        # TODO: Remove these when the new Ma2 parser is finished
+        self.version = ("0.00.00", version)
+        self.resolution = 384
 
     @classmethod
     def open(cls, path: str, encoding: str = "utf-8") -> MaiMa2:
@@ -485,6 +489,7 @@ class MaiMa2:
         duration: float,
         pattern: int,
         delay: float = 0.25,
+        slide_check: bool = True,
         decrement: bool = True,
     ) -> None:
         """Adds a slide note to the list of notes.
@@ -503,6 +508,7 @@ class MaiMa2:
                       measures.
             delay: Time duration of when the slide appears and when it
                    starts to move, in terms of measures.
+            slide_check: When set to true, will check validity of slides.
             decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
@@ -512,6 +518,9 @@ class MaiMa2:
             >>> ma2 = MaiMa2()
             >>> ma2.add_slide(2.5, 1, 5, 0.5, 5)
         """
+        if slide_check:
+            check_slide(pattern, start_position, end_position)
+
         if decrement:
             measure = max(0.0, measure - 1.0)
 
