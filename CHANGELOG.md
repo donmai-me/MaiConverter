@@ -11,19 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New script (sxt_to_ma2_with_bpms.py) that converts an MaiSxt chart to a MaiMa2 chart that copies the BPM skeleton of another MaiMa2 chart.
 
 ### Changed
-- All chart formats now internally start at measure 0 instead of 1.
-- All set, add, and del events on all chart formats have an optional boolean switch to disable measure decrement.
 - Renamed MaiSDT to MaiSxt.
 - Renamed maisdt package to maisxt.
 - Renamed all conversion functions that mentions sdt to sxt.
 - MaiSxt constructor now requires BPM.
 - Conversion functions that converts from MaiSxt no longer accepts initial_bpm parameter.
+- All chart class methods that returns None, now returns itself instead. For easy chaining.
 - MaiSxt and MaiMa2 add_slide now checks for validity of slide with an optional toggle to disable checks.
 - Encryption and decryption methods now only accept raw bytes.
 - MaiMa2 resolution moved from being an attribute to a parameter in export method.
 - Migrated changelog format to keep a changelog and remove entries from unreleased versions.
 - MaiMa2 and MaiSxt notes no longer have a newline character at the end when converted to string.
 - slide_distance and is_slide_cw moved from simai package to tool package. 
+- Time functions measure_to_second and second_to_measure now has an optional parameter `include_metronome_ticks`, which is set to True by default, that takes into account the first few metronome ticks at the start.
 
 ### Removed
 - Old scripts in the scripts folder.

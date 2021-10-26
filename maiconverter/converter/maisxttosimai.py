@@ -17,7 +17,7 @@ class StartSlide:
 
 def sdt_to_simai(sdt: MaiSxt) -> SimaiChart:
     simai_chart = SimaiChart()
-    simai_chart.set_bpm(0.0, sdt.bpm, decrement=False)
+    simai_chart.set_bpm(0.0, sdt.bpm)
     convert_notes(simai_chart, sdt.notes)
     return simai_chart
 
@@ -37,17 +37,15 @@ def convert_notes(
                 position=sdt_note.position,
                 is_break=is_break,
                 is_star=is_star,
-                decrement=False,
             )
         elif isinstance(sdt_note, HoldNote):
             simai_chart.add_hold(
                 measure=sdt_note.measure,
                 position=sdt_note.position,
                 duration=sdt_note.duration,
-                decrement=False,
             )
         elif isinstance(sdt_note, SlideStartNote):
-            # simai slide durations does not include the delay
+            # Simai slide durations does not include the delay
             # unlike in sxt
             start_slide = StartSlide(
                 measure=sdt_note.measure,
@@ -78,7 +76,6 @@ def convert_notes(
                 pattern=pattern[0],
                 delay=start_slide.delay,
                 reflect_position=pattern[1],
-                decrement=False,
             )
         else:
             print(f"Warning: Unknown note type {note_type}")

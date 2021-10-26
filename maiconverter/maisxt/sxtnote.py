@@ -239,7 +239,7 @@ def sdt_note_to_str(
     Returns:
         A single line string.
     """
-    measure = math.modf(note.measure + 1.0)
+    measure = math.modf(note.measure)
     note_type = note.note_type
     if isinstance(note, (HoldNote, SlideStartNote)):
         note_duration = note.duration

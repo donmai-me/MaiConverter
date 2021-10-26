@@ -51,7 +51,7 @@ class MaiSxt:
 
         return sdt
 
-    def parse_line(self, line: str) -> None:
+    def parse_line(self, line: str) -> MaiSxt:
         """Parse a non-SRT comma-separated line.
 
         Args:
@@ -123,7 +123,9 @@ class MaiSxt:
         else:
             raise ValueError("Unknown note type {}".format(note_type))
 
-    def parse_srt_line(self, line: str) -> None:
+        return self
+
+    def parse_srt_line(self, line: str) -> MaiSxt:
         """Parse an SRT comma-separated line.
 
         Args:
@@ -191,14 +193,15 @@ class MaiSxt:
         else:
             raise ValueError(f"Unknown note type {note_type}")
 
+        return self
+
     def add_tap(
         self,
         measure: float,
         position: int,
         is_break: bool = False,
         is_star: bool = False,
-        decrement: bool = True,
-    ) -> None:
+    ) -> MaiSxt:
         """Adds a tap note to the list of notes.
 
         Args:
@@ -206,7 +209,6 @@ class MaiSxt:
             position: Button where the tap note happens.
             is_break: Whether a tap note is a break note.
             is_star: Whether a tap note is a star note.
-            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a regular tap note at measure 1 at button 2,
@@ -216,21 +218,19 @@ class MaiSxt:
             >>> sxt.add_tap(1, 2)
             >>> sxt.add_tap(2, 7, is_break=True)
         """
-        if decrement:
-            measure = max(0.0, measure - 1.0)
-
         tap_note = TapNote(
             measure=measure, position=position, is_break=is_break, is_star=is_star
         )
         self.notes.append(tap_note)
 
-    def del_tap(self, measure: float, position: int, decrement: bool = True) -> None:
+        return self
+
+    def del_tap(self, measure: float, position: int) -> MaiSxt:
         """Deletes a tap note from the list of notes.
 
         Args:
             measure: Time when the note starts, in terms of measures.
             position: Button where the tap note happens.
-            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Create a break tap note at measure 26.75 at button 4. Then delete it.
@@ -239,9 +239,6 @@ class MaiSxt:
             >>> sxt.add_tap(26.75, 4, is_break=True)
             >>> sxt.del_tap(26.75, 4)
         """
-        if decrement:
-            measure = max(0.0, measure - 1.0)
-
         tap_notes = [
             x
             for x in self.notes
@@ -252,20 +249,20 @@ class MaiSxt:
         for note in tap_notes:
             self.notes.remove(note)
 
+        return self
+
     def add_hold(
         self,
         measure: float,
         position: int,
         duration: float,
-        decrement: bool = True,
-    ) -> None:
+    ) -> MaiSxt:
         """Adds a hold note to the list of notes.
 
         Args:
             measure: Time when the hold starts, in terms of measures.
             position: Button where the hold happens.
             duration: Total duration of the hold, in terms of measures.
-            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a regular hold note at button 5 at measure 1.5, with
@@ -274,20 +271,22 @@ class MaiSxt:
             >>> sxt = MaiSxt()
             >>> sxt.add_hold(1.5, 5, 2.75)
         """
-        if decrement:
-            measure = max(0.0, measure - 1.0)
-
         hold_note = HoldNote(measure=measure, position=position, duration=duration)
         self.notes.append(hold_note)
 
-    def del_hold(self, measure: float, position: int, decrement: bool = True) -> None:
+        return self
+
+    def del_hold(
+        self,
+        measure: float,
+        position: int,
+    ) -> MaiSxt:
         """Deletes the matching hold note in the list of notes. If there are multiple
         matches, all matching notes are deleted. If there are no match, nothing happens.
 
         Args:
             measure: Time when the note starts, in terms of measures.
             position: Button where the hold note happens.
-            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a regular hold note at button 0 at measure 3.25 with duration of 2 measures
@@ -297,9 +296,6 @@ class MaiSxt:
             >>> sxt.add_hold(3.25, 0, 2)
             >>> sxt.del_hold(3.25, 0)
         """
-        if decrement:
-            measure = max(0.0, measure - 1.0)
-
         hold_notes = [
             x
             for x in self.notes
@@ -310,7 +306,8 @@ class MaiSxt:
         for note in hold_notes:
             self.notes.remove(note)
 
-    # Note: SDT slide duration includes delay
+        return self
+
     def add_slide(
         self,
         measure: float,
@@ -320,9 +317,9 @@ class MaiSxt:
         pattern: int,
         delay: float = 0.25,
         slide_check: bool = True,
-        decrement: bool = True,
-    ) -> None:
+    ) -> MaiSxt:
         """Adds both a start slide and end slide note to the list of notes.
+        Note: SXT slide duration includes delay and should not be less than its delay.
 
         Args:
             measure: Time when the slide starts, in
@@ -335,7 +332,6 @@ class MaiSxt:
             delay: Duration from when the slide appears and when it
                 starts to move, in terms of measures. Defaults to 0.25.
             slide_check: When set to true, will check validity of slides.
-            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Raises:
             ValueError: When a slide is invalid and crashes the game (Can be disabled by setting check_slide to False.)
@@ -351,9 +347,6 @@ class MaiSxt:
         """
         if slide_check:
             check_slide(pattern, start_position, end_position)
-
-        if decrement:
-            measure = max(0.0, measure - 1.0)
 
         slide_id = self.slide_count
         start_slide = SlideStartNote(
@@ -386,16 +379,14 @@ class MaiSxt:
         for star_note in star_notes:
             star_note.amount += 1
 
+        return self
+
     def del_slide(
         self,
         measure: float,
         start_position: int,
         end_position: int,
-        decrement: bool = True,
-    ) -> None:
-        if decrement:
-            measure = max(0.0, measure - 1.0)
-
+    ) -> MaiSxt:
         start_slides = [
             x
             for x in self.notes
@@ -441,7 +432,9 @@ class MaiSxt:
         for star_note in star_notes:
             star_note.amount -= 1
 
-    def offset(self, offset: Union[float, str]) -> None:
+        return self
+
+    def offset(self, offset: Union[float, str]) -> MaiSxt:
         if isinstance(offset, float):
             offset = offset
         elif isinstance(offset, str) and offset[-1].lower() == "s":
@@ -458,18 +451,13 @@ class MaiSxt:
         for note in self.notes:
             note.measure = round((note.measure + offset) * 10000.0) / 10000.0
 
-    def measure_to_second(self, measure: float, decrement: bool = True) -> float:
-        if decrement and measure > 0.0:
-            measure = max(0.0, measure - 1.0)
+        return self
 
+    def measure_to_second(self, measure: float) -> float:
         return measure_to_second(measure, [(0.0, self.bpm)])
 
-    def second_to_measure(self, seconds: float, increment: bool = True) -> float:
-        measure = second_to_measure(seconds, [(0.0, self.bpm)])
-        if increment and measure >= 0.0:
-            measure += 1.0
-
-        return measure
+    def second_to_measure(self, seconds: float) -> float:
+        return second_to_measure(seconds, [(0.0, self.bpm)])
 
     def export(self) -> str:
         """Generates an sxt text from all the notes defined.

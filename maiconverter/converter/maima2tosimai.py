@@ -12,7 +12,7 @@ def ma2_to_simai(ma2: MaiMa2) -> SimaiChart:
     simai_chart = SimaiChart()
 
     for bpm in ma2.bpms:
-        simai_chart.set_bpm(bpm.measure, bpm.bpm, decrement=False)
+        simai_chart.set_bpm(bpm.measure, bpm.bpm)
 
     convert_notes(simai_chart, ma2.notes)
 
@@ -36,7 +36,6 @@ def convert_notes(simai_chart: SimaiChart, ma2_notes: Sequence[MaiNote]) -> None
                 is_break=is_break,
                 is_star=is_star,
                 is_ex=is_ex,
-                decrement=False,
             )
         elif isinstance(ma2_note, HoldNote):
             is_ex = note_type == NoteType.ex_hold
@@ -45,7 +44,6 @@ def convert_notes(simai_chart: SimaiChart, ma2_notes: Sequence[MaiNote]) -> None
                 position=ma2_note.position,
                 duration=ma2_note.duration,
                 is_ex=is_ex,
-                decrement=False,
             )
         elif isinstance(ma2_note, SlideNote):
             # Ma2 slide durations does not include the delay
@@ -61,7 +59,6 @@ def convert_notes(simai_chart: SimaiChart, ma2_notes: Sequence[MaiNote]) -> None
                 pattern=pattern[0],
                 delay=ma2_note.delay,
                 reflect_position=pattern[1],
-                decrement=False,
             )
         elif isinstance(ma2_note, TouchTapNote):
             simai_chart.add_touch_tap(
@@ -69,7 +66,6 @@ def convert_notes(simai_chart: SimaiChart, ma2_notes: Sequence[MaiNote]) -> None
                 position=ma2_note.position,
                 region=ma2_note.region,
                 is_firework=ma2_note.is_firework,
-                decrement=False,
             )
         elif isinstance(ma2_note, TouchHoldNote):
             simai_chart.add_touch_hold(
@@ -78,7 +74,6 @@ def convert_notes(simai_chart: SimaiChart, ma2_notes: Sequence[MaiNote]) -> None
                 region=ma2_note.region,
                 duration=ma2_note.duration,
                 is_firework=ma2_note.is_firework,
-                decrement=False,
             )
         else:
             print("Warning: Unknown note type {}".format(note_type))

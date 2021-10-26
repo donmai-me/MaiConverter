@@ -30,17 +30,16 @@ def _default_touch_converter(
     sdt: MaiSxt, touch_note: Union[TouchTapNote, TouchHoldNote]
 ) -> None:
     if isinstance(touch_note, TouchTapNote) and touch_note.region == "C":
-        sdt.add_tap(measure=touch_note.measure, position=0, decrement=False)
+        sdt.add_tap(measure=touch_note.measure, position=0)
     elif isinstance(touch_note, TouchTapNote):
         sdt.add_tap(
-            measure=touch_note.measure, position=touch_note.position, decrement=False
+            measure=touch_note.measure, position=touch_note.position
         )
     elif isinstance(touch_note, TouchHoldNote) and touch_note.region == "C":
         sdt.add_hold(
             measure=touch_note.measure,
             position=0,
             duration=touch_note.duration,
-            decrement=False,
         )
 
 
@@ -59,11 +58,11 @@ def ma2_to_sdt(
     equivalent_notes = []
     for note in sdt.notes:
         current_measure = note.measure
-        current_time = ma2.measure_to_second(current_measure, decrement=False)
-        scale = sdt.bpm / ma2.get_bpm(current_measure, decrement=False)
+        current_time = ma2.measure_to_second(current_measure)
+        scale = sdt.bpm / ma2.get_bpm(current_measure)
 
         note = copy.deepcopy(note)
-        note.measure = sdt.second_to_measure(current_time, increment=False)
+        note.measure = sdt.second_to_measure(current_time)
 
         if isinstance(note, SDTHoldNote):
             note.duration = note.duration * scale
@@ -94,7 +93,6 @@ def convert_notes(
                 position=ma2_note.position,
                 is_break=is_break,
                 is_star=is_star,
-                decrement=False,
             )
         elif isinstance(ma2_note, HoldNote):
             # Hold, and ex hold
@@ -102,7 +100,6 @@ def convert_notes(
                 measure=ma2_note.measure,
                 position=ma2_note.position,
                 duration=ma2_note.duration,
-                decrement=False,
             )
         elif isinstance(ma2_note, SlideNote):
             # Complete slide
@@ -114,7 +111,6 @@ def convert_notes(
                 duration=ma2_note.duration + ma2_note.delay,
                 pattern=ma2_note.pattern,
                 delay=ma2_note.delay,
-                decrement=False,
             )
         elif isinstance(ma2_note, (TouchTapNote, TouchHoldNote)):
             # Touch tap, and touch hold

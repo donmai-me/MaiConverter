@@ -37,7 +37,7 @@ class SimaiChart:
         ] = []
         self.bpms: List[BPM] = []
         self._divisor: Optional[float] = None
-        self._measure = 0.0
+        self._measure = 1.0
 
     @classmethod
     def from_str(cls, chart_text: str, message: Optional[str] = None) -> SimaiChart:
@@ -63,9 +63,7 @@ class SimaiChart:
             for event in events:
                 event_type = event["type"]
                 if event_type == "bpm":
-                    simai_chart.set_bpm(
-                        simai_chart._measure, event["value"], decrement=False
-                    )
+                    simai_chart.set_bpm(simai_chart._measure, event["value"])
                 elif event_type == "divisor":
                     simai_chart._divisor = event["value"]
                 elif event_type == "tap":
@@ -90,7 +88,6 @@ class SimaiChart:
                         is_break=is_break,
                         is_star=is_star,
                         is_ex=is_ex,
-                        decrement=False,
                     )
                 elif event_type == "hold":
                     is_ex = False
@@ -109,7 +106,6 @@ class SimaiChart:
                         position=event["button"],
                         duration=event["duration"],
                         is_ex=is_ex,
-                        decrement=False,
                     )
                 elif event_type == "slide":
                     is_break, is_ex, is_tapless = False, False, False
@@ -141,7 +137,6 @@ class SimaiChart:
                             is_break=is_break,
                             is_star=True,
                             is_ex=is_ex,
-                            decrement=False,
                         )
                         star_positions.append(event["start_button"])
 
@@ -150,8 +145,7 @@ class SimaiChart:
                     delay = 0.25
                     if equivalent_bpm is not None:
                         multiplier = (
-                            simai_chart.get_bpm(simai_chart._measure, decrement=False)
-                            / equivalent_bpm
+                            simai_chart.get_bpm(simai_chart._measure) / equivalent_bpm
                         )
                         duration = multiplier * duration
                         delay = multiplier * delay
@@ -182,7 +176,6 @@ class SimaiChart:
                         position=event["location"],
                         region=event["region"],
                         is_firework=is_firework,
-                        decrement=False,
                     )
 
                 elif event_type == "touch_hold":
@@ -203,7 +196,6 @@ class SimaiChart:
                         region=event["region"],
                         duration=event["duration"],
                         is_firework=is_firework,
-                        decrement=False,
                     )
                 else:
                     raise Exception(f"Unknown event type: {event_type}")
@@ -237,7 +229,6 @@ class SimaiChart:
         is_break: bool = False,
         is_star: bool = False,
         is_ex: bool = False,
-        decrement: bool = True,
     ) -> None:
         """Adds a tap note to the list of notes.
 
@@ -247,7 +238,6 @@ class SimaiChart:
             is_break: Whether a tap note is a break note.
             is_star: Whether a tap note is a star note.
             is_ex: Whether a tap note is an ex note.
-            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a regular tap note at measure 1, break tap note at
@@ -262,9 +252,6 @@ class SimaiChart:
             >>> simai.add_tap(3, 7, is_star=True)
             >>> simai.add_tap(5, 7, is_break=True, is_star=True)
         """
-        if decrement:
-            measure = max(0.0, measure - 1.0)
-
         tap_note = TapNote(
             measure=measure,
             position=position,
@@ -274,13 +261,12 @@ class SimaiChart:
         )
         self.notes.append(tap_note)
 
-    def del_tap(self, measure: float, position: int, decrement: bool = True) -> None:
+    def del_tap(self, measure: float, position: int) -> None:
         """Deletes a tap note from the list of notes.
 
         Args:
             measure: Time when the note starts, in terms of measures.
             position: Button where the tap note happens.
-            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Remove tap note at measure 26.75 at button 4.
@@ -288,9 +274,6 @@ class SimaiChart:
             >>> simai.add_tap(26.5, 4)
             >>> simai.del_tap(26.75, 4)
         """
-        if decrement:
-            measure = max(0.0, measure - 1.0)
-
         tap_notes = [
             x
             for x in self.notes
@@ -307,7 +290,6 @@ class SimaiChart:
         position: int,
         duration: float,
         is_ex: bool = False,
-        decrement: bool = True,
     ) -> None:
         """Adds a hold note to the list of notes.
 
@@ -316,7 +298,6 @@ class SimaiChart:
             position: Button where the hold note happens.
             duration: Total time duration of the hold note.
             is_ex: Whether a hold note is an ex note.
-            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a regular hold note at button 2 at measure 1, with
@@ -327,20 +308,16 @@ class SimaiChart:
             >>> simai.add_hold(1, 2, 5)
             >>> simai.add_hold(3, 6, 0.5, is_ex=True)
         """
-        if decrement:
-            measure = max(0.0, measure - 1.0)
-
         hold_note = HoldNote(measure, position, duration, is_ex)
         self.notes.append(hold_note)
 
-    def del_hold(self, measure: float, position: int, decrement: bool = True) -> None:
+    def del_hold(self, measure: float, position: int) -> None:
         """Deletes the matching hold note in the list of notes. If there are multiple
         matches, all matching notes are deleted. If there are no match, nothing happens.
 
         Args:
             measure: Time when the note starts, in terms of measures.
             position: Button where the hold note happens.
-            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a regular hold note at button 0 at measure 3.25 with duration of 2 measures
@@ -350,9 +327,6 @@ class SimaiChart:
             >>> simai.add_hold(3.25, 0, 2)
             >>> simai.del_hold(3.25, 0)
         """
-        if decrement:
-            measure = max(0.0, measure - 1.0)
-
         hold_notes = [
             x
             for x in self.notes
@@ -372,7 +346,6 @@ class SimaiChart:
         pattern: str,
         delay: float = 0.25,
         reflect_position: Optional[int] = None,
-        decrement: bool = True,
     ) -> None:
         """Adds both a slide note to the list of notes.
 
@@ -388,7 +361,6 @@ class SimaiChart:
                 starts to move, in terms of measures. Defaults to 0.25.
             reflect_position: The button where the 'V' slide will first go to.
                 Optional, defaults to None.
-            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Add a '-' slide at measure 2.25 from button 1 to button 5 with
@@ -398,9 +370,6 @@ class SimaiChart:
             >>> simai.add_slide(2.25, 1, 5, 1.5, "-")
             >>> simai.add_slide(3, 2, 7, 0.5, "V", reflect_position=4)
         """
-        if decrement:
-            measure = max(0.0, measure - 1.0)
-
         slide_note = SlideNote(
             measure,
             start_position,
@@ -417,11 +386,7 @@ class SimaiChart:
         measure: float,
         start_position: int,
         end_position: int,
-        decrement: bool = True,
     ) -> None:
-        if decrement:
-            measure = max(0.0, measure - 1.0)
-
         slide_notes = [
             x
             for x in self.notes
@@ -439,20 +404,16 @@ class SimaiChart:
         position: int,
         region: str,
         is_firework: bool = False,
-        decrement: bool = True,
     ) -> None:
-        if decrement:
-            measure = max(0.0, measure - 1.0)
-
         touch_tap_note = TouchTapNote(measure, position, region, is_firework)
         self.notes.append(touch_tap_note)
 
     def del_touch_tap(
-        self, measure: float, position: int, region: str, decrement: bool = True
+        self,
+        measure: float,
+        position: int,
+        region: str,
     ) -> None:
-        if decrement:
-            measure = max(0.0, measure - 1.0)
-
         touch_taps = [
             x
             for x in self.notes
@@ -471,22 +432,18 @@ class SimaiChart:
         region: str,
         duration: float,
         is_firework: bool = False,
-        decrement: bool = True,
     ) -> None:
-        if decrement:
-            measure = max(0.0, measure - 1.0)
-
         touch_hold_note = TouchHoldNote(
             measure, position, region, duration, is_firework
         )
         self.notes.append(touch_hold_note)
 
     def del_touch_hold(
-        self, measure: float, position: int, region: str, decrement: bool = True
+        self,
+        measure: float,
+        position: int,
+        region: str,
     ) -> None:
-        if decrement:
-            measure = max(0.0, measure - 1.0)
-
         touch_holds = [
             x
             for x in self.notes
@@ -498,7 +455,7 @@ class SimaiChart:
         for note in touch_holds:
             self.notes.remove(note)
 
-    def set_bpm(self, measure: float, bpm: float, decrement: bool = True) -> None:
+    def set_bpm(self, measure: float, bpm: float) -> None:
         """Sets the bpm at given measure.
 
         Note:
@@ -508,7 +465,6 @@ class SimaiChart:
         Args:
             measure: Time, in measures, where the bpm is defined.
             bpm: The tempo in beat per minutes.
-            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             In a chart, the initial bpm is 180 then changes
@@ -518,20 +474,16 @@ class SimaiChart:
             >>> simai.set_bpm(0, 180)
             >>> simai.set_bpm(12, 250)
         """
-        if decrement:
-            measure = max(0.0, measure - 1.0)
-
-        self.del_bpm(measure, decrement)
+        self.del_bpm(measure)
 
         bpm_event = BPM(measure, bpm)
         self.bpms.append(bpm_event)
 
-    def get_bpm(self, measure: float, decrement: bool = True) -> float:
+    def get_bpm(self, measure: float) -> float:
         """Gets the bpm at given measure.
 
         Args:
             measure: Time, in measures.
-            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Returns:
             Returns the bpm defined at given measure or None.
@@ -554,11 +506,8 @@ class SimaiChart:
         """
         if len(self.bpms) == 0:
             raise ValueError("No BPMs defined")
-        if not any([0.0 == x.measure for x in self.bpms]):
+        if not any([0.0 <= x.measure <= 1.0 for x in self.bpms]):
             raise ValueError("No starting BPM defined")
-
-        if decrement:
-            measure = max(0.0, measure - 1.0)
 
         self.bpms.sort(key=lambda x: x.measure)
         previous_bpm = self.bpms[0].bpm
@@ -572,7 +521,7 @@ class SimaiChart:
 
         return previous_bpm
 
-    def del_bpm(self, measure: float, decrement: bool = True):
+    def del_bpm(self, measure: float):
         """Deletes the bpm at given measure.
 
         Note:
@@ -580,7 +529,6 @@ class SimaiChart:
 
         Args:
             measure: Time, in measures, where the bpm is defined.
-            decrement: When set to true, measure is subtracted by 1. Defaults to true.
 
         Examples:
             Delete the BPM change defined at measure 24.
@@ -588,9 +536,6 @@ class SimaiChart:
             >>> simai = SimaiChart()
             >>> simai.del_bpm(24)
         """
-        if decrement:
-            measure = max(0.0, measure - 1.0)
-
         bpms = [
             x for x in self.bpms if math.isclose(x.measure, measure, abs_tol=0.0001)
         ]
@@ -609,20 +554,14 @@ class SimaiChart:
 
             bpm.measure = round(bpm.measure + offset, 4)
 
-    def measure_to_second(self, measure: float, decrement: bool = True) -> float:
-        if decrement and measure > 0.0:
-            measure = max(0.0, measure - 1.0)
-
+    def measure_to_second(self, measure: float) -> float:
         bpms = [(bpm.measure, bpm.bpm) for bpm in self.bpms]
 
         return measure_to_second(measure, bpms)
 
-    def second_to_measure(self, seconds: float, increment: bool = True) -> float:
+    def second_to_measure(self, seconds: float) -> float:
         bpms = [(bpm.measure, bpm.bpm) for bpm in self.bpms]
         measure = second_to_measure(seconds, bpms)
-
-        if increment and measure >= 0.0:
-            measure += 1.0
 
         return measure
 

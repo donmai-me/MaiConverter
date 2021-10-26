@@ -20,8 +20,8 @@ def sdt_to_ma2(
     fes_mode: bool = False,
 ) -> MaiMa2:
     ma2 = MaiMa2(fes_mode=fes_mode)
-    ma2.set_bpm(0.0, sdt.bpm, decrement=False)
-    ma2.set_meter(0.0, 4, 4, decrement=False)
+    ma2.set_bpm(0.0, sdt.bpm)
+    ma2.set_meter(0.0, 4, 4)
     convert_notes(ma2, sdt.notes)
     return ma2
 
@@ -41,14 +41,12 @@ def convert_notes(
                 position=sdt_note.position,
                 is_break=is_break,
                 is_star=is_star,
-                decrement=False,
             )
         elif isinstance(sdt_note, HoldNote):
             ma2.add_hold(
                 measure=sdt_note.measure,
                 position=sdt_note.position,
                 duration=sdt_note.duration,
-                decrement=False,
             )
         elif isinstance(sdt_note, SlideStartNote):
             # ma2 slide durations does not include the delay unlike in sxt
@@ -77,7 +75,6 @@ def convert_notes(
                 duration=start_slide.duration,
                 pattern=sdt_note.pattern,
                 delay=start_slide.delay,
-                decrement=False,
             )
         else:
             print("Warning: Unknown note type {}".format(note_type))
