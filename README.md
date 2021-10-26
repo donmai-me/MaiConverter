@@ -1,4 +1,4 @@
-e# MaiConverter
+# MaiConverter
 A Python program for parsing and converting Maimai charts. Made up of two parts: 
 * An importable package for parsing, creating, exporting, and converting SDT, Ma2, and 3Simai charts. And
 * a commandline script for parsing and converting the 3 formats.
