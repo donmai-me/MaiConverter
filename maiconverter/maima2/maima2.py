@@ -15,8 +15,12 @@ from .ma2note import (
     check_slide,
 )
 from .tools import parse_v1
-from ..event import NoteType
-from ..tool import second_to_measure, measure_to_second, offset_arg_to_measure
+from maiconverter.event import NoteType
+from maiconverter.tool import (
+    second_to_measure,
+    measure_to_second,
+    offset_arg_to_measure,
+)
 
 # Latest chart version
 MA2_VERSION = "1.03.00"
@@ -98,7 +102,7 @@ class MaiMa2:
 
         return ma2
 
-    def parse_line(self, line: str) -> None:
+    def parse_line(self, line: str) -> MaiMa2:
         # Ma2 notes are tab-separated so we make a list called values that contains all the info
         values = line.rstrip().split("\t")
         line_type = values[0]
@@ -111,7 +115,9 @@ class MaiMa2:
         else:
             raise ValueError(f"Unknown Ma2 version: {self.version}")
 
-    def set_bpm(self, measure: float, bpm: float) -> None:
+        return self
+
+    def set_bpm(self, measure: float, bpm: float) -> MaiMa2:
         """Sets the bpm at given measure.
 
         Note:
@@ -133,6 +139,8 @@ class MaiMa2:
         self.del_bpm(measure)
         self.bpms.append(BPM(measure, bpm))
 
+        return self
+
     def get_bpm(self, measure: float) -> float:
         """Gets the bpm at given measure.
 
@@ -150,6 +158,8 @@ class MaiMa2:
             In a chart, the initial bpm is 180 then changes
             to 250 in measure 12.
 
+            >>> ma2 = MaiMa2()
+            >>> ma2.set_bpm(0.0, 180.0).set_bpm(12, 250)
             >>> ma2.get_bpm(0)
             180.0
             >>> ma2.get_bpm(11.99)
@@ -174,7 +184,7 @@ class MaiMa2:
 
         return previous_bpm
 
-    def del_bpm(self, measure: float):
+    def del_bpm(self, measure: float) -> MaiMa2:
         """Deletes the bpm at given measure.
 
         Note:
@@ -186,6 +196,7 @@ class MaiMa2:
         Examples:
             Delete the BPM change defined at measure 24.
 
+            >>> ma2 = MaiMa2()
             >>> ma2.del_bpm(24)
         """
         bpms = [
@@ -194,12 +205,14 @@ class MaiMa2:
         for x in bpms:
             self.bpms.remove(x)
 
+        return self
+
     def set_meter(
         self,
         measure: float,
         meter_numerator: int,
         meter_denominator: int,
-    ) -> None:
+    ) -> MaiMa2:
         """Sets the meter signature at given measure.
 
         Note:
@@ -221,6 +234,8 @@ class MaiMa2:
         """
         self.del_meter(measure)
         self.meters.append(Meter(measure, meter_numerator, meter_denominator))
+
+        return self
 
     def get_meter(self, measure: float) -> Tuple[int, int]:
         """Gets the bpm at given measure.
@@ -258,12 +273,14 @@ class MaiMa2:
 
         return previous_meter.numerator, previous_meter.numerator
 
-    def del_meter(self, measure: float):
+    def del_meter(self, measure: float) -> MaiMa2:
         meters = [
             x for x in self.meters if math.isclose(x.measure, measure, abs_tol=0.0001)
         ]
         for x in meters:
             self.meters.remove(x)
+
+        return self
 
     def add_tap(
         self,
@@ -272,7 +289,7 @@ class MaiMa2:
         is_break: bool = False,
         is_star: bool = False,
         is_ex: bool = False,
-    ) -> None:
+    ) -> MaiMa2:
         """Adds a tap note to the list of notes.
 
         Used to add TAP, XTP, BRK, STR, or BST to the list of notes. Increments
@@ -321,7 +338,9 @@ class MaiMa2:
 
         self.notes.append(tap_note)
 
-    def del_tap(self, measure: float, position: int) -> None:
+        return self
+
+    def del_tap(self, measure: float, position: int) -> MaiMa2:
         """Deletes a tap note from the list of notes.
 
         Args:
@@ -364,13 +383,15 @@ class MaiMa2:
             elif not is_break and not is_star and not is_ex:
                 self.notes_stat["TAP"] -= 1
 
+        return self
+
     def add_hold(
         self,
         measure: float,
         position: int,
         duration: float,
         is_ex: bool = False,
-    ) -> None:
+    ) -> MaiMa2:
         """Adds a hold note to the list of notes.
 
         Used to add HLD or XHO to the list of notes. Increments the total
@@ -400,7 +421,9 @@ class MaiMa2:
 
         self.notes.append(hold_note)
 
-    def del_hold(self, measure: float, position: int) -> None:
+        return self
+
+    def del_hold(self, measure: float, position: int) -> MaiMa2:
         """Deletes the matching hold note in the list of notes. If there are multiple
         matches, all matching notes are deleted. If there are no match, nothing happens.
 
@@ -431,6 +454,8 @@ class MaiMa2:
             else:
                 self.notes_stat["HLD"] -= 1
 
+        return self
+
     def add_slide(
         self,
         measure: float,
@@ -440,7 +465,7 @@ class MaiMa2:
         pattern: int,
         delay: float = 0.25,
         slide_check: bool = True,
-    ) -> None:
+    ) -> MaiMa2:
         """Adds a slide note to the list of notes.
 
         Used to add SI_, SCL, SCR, SUL, SUR, SSL, SSR, SV_, SXL, SXR,
@@ -480,12 +505,14 @@ class MaiMa2:
         self.notes_stat["SLD"] += 1
         self.notes.append(slide_note)
 
+        return self
+
     def del_slide(
         self,
         measure: float,
         start_position: int,
         end_position: int,
-    ) -> None:
+    ) -> MaiMa2:
         slide_notes = [
             x
             for x in self.notes
@@ -499,6 +526,8 @@ class MaiMa2:
             self.notes.remove(note)
             self.notes_stat["SLD"] -= 1
 
+        return self
+
     def add_touch_tap(
         self,
         measure: float,
@@ -506,7 +535,7 @@ class MaiMa2:
         region: str,
         is_firework: bool = False,
         size: str = "M1",
-    ) -> None:
+    ) -> MaiMa2:
         """Adds a touch tap note to the list of notes.
 
         Used to add TTP to the list of notes. Increments the total touch taps
@@ -530,7 +559,9 @@ class MaiMa2:
         self.notes_stat["TTP"] += 1
         self.notes.append(touch_tap)
 
-    def del_touch_tap(self, measure: float, position: int, region: str) -> None:
+        return self
+
+    def del_touch_tap(self, measure: float, position: int, region: str) -> MaiMa2:
         touch_taps = [
             x
             for x in self.notes
@@ -543,6 +574,8 @@ class MaiMa2:
             self.notes.remove(note)
             self.notes_stat["TTP"] -= 1
 
+        return self
+
     def add_touch_hold(
         self,
         measure: float,
@@ -551,7 +584,7 @@ class MaiMa2:
         duration: float,
         is_firework: bool = False,
         size: str = "M1",
-    ) -> None:
+    ) -> MaiMa2:
         """Adds a touch hold note to the list of notes.
 
         Used to add THO to the list of notes. Increments the total touch holds
@@ -579,12 +612,14 @@ class MaiMa2:
         self.notes_stat["THO"] += 1
         self.notes.append(touch_tap)
 
+        return self
+
     def del_touch_hold(
         self,
         measure: float,
         position: int,
         region: str,
-    ) -> None:
+    ) -> MaiMa2:
         touch_holds = [
             x
             for x in self.notes
@@ -597,23 +632,27 @@ class MaiMa2:
             self.notes.remove(note)
             self.notes_stat["THO"] -= 1
 
-    def offset(self, offset: Union[float, str]) -> None:
+        return self
+
+    def offset(self, offset: Union[float, str]) -> MaiMa2:
         offset = offset_arg_to_measure(offset, self.second_to_measure)
 
         for note in self.notes:
             note.measure = round(note.measure + offset, 4)
 
         for bpm in self.bpms:
-            if bpm.measure == 0:
+            if 0 <= bpm.measure <= 1:
                 continue
 
             bpm.measure = round(bpm.measure + offset, 4)
 
         for meter in self.meters:
-            if meter.measure == 0:
+            if 0 <= meter.measure <= 1:
                 continue
 
             meter.measure = round(meter.measure + offset, 4)
+
+        return self
 
     def measure_to_second(self, measure: float) -> float:
         bpms = [(bpm.measure, bpm.bpm) for bpm in self.bpms]

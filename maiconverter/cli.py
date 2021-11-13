@@ -51,7 +51,7 @@ def crypto(args, output):
                     file for file in files if not re.search(r"\.tbl", file) is None
                 ]
             else:
-                # Only accept ".sxt" ".sct" ".szt" ".srt" files
+                # Only accept ".sdt" ".sct" ".szt" ".srt" files
                 files = [
                     file for file in files if not re.search(r"\.s.t", file) is None
                 ]
@@ -122,7 +122,7 @@ def handle_ma2(file, name, output_path, args):
 
     if args.command == "ma2tosdt":
         output = ma2_to_sdt(ma2, convert_touch=args.convert_touch)
-        ext = ".sxt"
+        ext = ".sdt"
     else:
         output = ma2_to_simai(ma2)
         ext = ".txt"
@@ -166,7 +166,7 @@ def handle_simai_chart(file, name, output_path, args):
         simai.offset(args.delay)
 
     if args.command == "simaitosdt":
-        ext = ".sxt"
+        ext = ".sdt"
         converted = simai_to_sdt(simai, convert_touch=args.convert_touch)
     else:
         ext = ".ma2"
@@ -175,7 +175,10 @@ def handle_simai_chart(file, name, output_path, args):
     with open(
         os.path.join(output_path, name + ext), "w+", newline="\r\n", encoding="utf-8"
     ) as out:
-        out.write(converted.export(resolution=args.resolution))
+        if isinstance(converted, MaiSxt):
+            out.write(converted.export())
+        else:
+            out.write(converted.export(resolution=args.resolution))
 
 
 def handle_simai_file(file, output_path, args):
@@ -187,7 +190,7 @@ def handle_simai_file(file, output_path, args):
 
         try:
             if args.command == "simaifiletosdt":
-                ext = ".sxt"
+                ext = ".sdt"
                 converted = simai_to_sdt(simai_chart, convert_touch=args.convert_touch)
             else:
                 ext = ".ma2"
@@ -237,20 +240,21 @@ def handle_db(input_path, output_dir, command, key):
         f.write(output)
 
 
-def parse_arg():
-    COMMANDS = [
-        "encrypt",
-        "decrypt",
-        "ma2tosdt",
-        "ma2tosimai",
-        "sdttoma2",
-        "sdttosimai",
-        "simaifiletoma2",
-        "simaifiletosdt",
-        "simaitoma2",
-        "simaitosdt",
-    ]
+COMMANDS = [
+    "encrypt",
+    "decrypt",
+    "ma2tosdt",
+    "ma2tosimai",
+    "sdttoma2",
+    "sdttosimai",
+    "simaifiletoma2",
+    "simaifiletosdt",
+    "simaitoma2",
+    "simaitosdt",
+]
 
+
+def parse_arg():
     parser = argparse.ArgumentParser(
         description="Tool for converting MaiMai chart formats",
         allow_abbrev=False,

@@ -1,6 +1,7 @@
 import enum
 import math
 from functools import total_ordering
+from typing import Dict
 
 from .event import Event, EventType
 
@@ -34,6 +35,12 @@ class NoteType(enum.Enum):
     touch_hold = 10
     complete_slide = 11
     end_slide = 128
+
+
+NOTE_ORDERING: Dict[int, int] = {
+    5: 0,
+    4: 0,
+}
 
 
 class Note(Event):

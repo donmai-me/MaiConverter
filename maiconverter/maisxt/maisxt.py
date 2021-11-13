@@ -12,7 +12,7 @@ from .sxtnote import (
     check_slide,
 )
 from ..event import NoteType
-from ..tool import measure_to_second, second_to_measure
+from ..tool import measure_to_second, second_to_measure, offset_arg_to_measure
 
 
 class MaiSxt:
@@ -435,18 +435,7 @@ class MaiSxt:
         return self
 
     def offset(self, offset: Union[float, str]) -> MaiSxt:
-        if isinstance(offset, float):
-            offset = offset
-        elif isinstance(offset, str) and offset[-1].lower() == "s":
-            offset = self.second_to_measure(float(offset[:-1]))
-        elif isinstance(offset, str) and "/" in offset:
-            fraction = offset.split("/")
-            if len(fraction) != 2:
-                raise ValueError(f"Invalid fraction: {offset}")
-
-            offset = int(fraction[0]) / int(fraction[1])
-        else:
-            offset = float(offset)
+        offset = offset_arg_to_measure(offset, self.second_to_measure)
 
         for note in self.notes:
             note.measure = round((note.measure + offset) * 10000.0) / 10000.0

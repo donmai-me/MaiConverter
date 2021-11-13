@@ -4,9 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.14.0] - 2021-11-14
 ### Added
 - New time tracking functions: measure_to_second, second_to_measure, and quantise.
+- Time functions measure_to_second and second_to_measure has an optional parameter `include_metronome_ticks`, set to True by default, that takes into account the first few metronome ticks at the start.
 - New script (sxt_change_bpm.py) that converts an MaiSxt chart written in one BPM to another.
 - New script (sxt_to_ma2_with_bpms.py) that converts an MaiSxt chart to a MaiMa2 chart that copies the BPM skeleton of another MaiMa2 chart.
 
@@ -22,8 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MaiMa2 resolution moved from being an attribute to a parameter in export method.
 - Migrated changelog format to keep a changelog and remove entries from unreleased versions.
 - MaiMa2 and MaiSxt notes no longer have a newline character at the end when converted to string.
-- slide_distance and is_slide_cw moved from simai package to tool package. 
-- Time functions measure_to_second and second_to_measure now has an optional parameter `include_metronome_ticks`, which is set to True by default, that takes into account the first few metronome ticks at the start.
+- slide_distance and is_slide_cw moved from simai package to tool package.
 
 ### Removed
 - Old scripts in the scripts folder.
@@ -42,5 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ma2 to Sdt conversion and vice versa.
 - Simai to Sdt conversion and vice versa.
 
-[Unreleased]: https://github.com/donmai-me/MaiConverter/compare/0.13.0...HEAD
+[Unreleased]: https://github.com/donmai-me/MaiConverter/compare/0.14.0...HEAD
+[0.14.0]: https://github.com/donmai-me/MaiConverter/compare/0.13.0...0.14.0
 [0.13.0]: https://github.com/donmai-me/MaiConverter/compare/0.12.0...0.13.0

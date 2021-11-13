@@ -1,5 +1,5 @@
 from importlib.metadata import version, PackageNotFoundError
-from .maiconverter import main
+from maiconverter.cli import main
 
 try:
     __version__ = version("maiconverter")

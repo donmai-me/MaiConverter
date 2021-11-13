@@ -31,7 +31,7 @@ setup(
     ],
     package_data={"": ["*.lark"]},
     entry_points={
-        "console_scripts": ["maiconverter=maiconverter:main"],
+        "console_scripts": ["maiconverter=maiconverter.cli:main"],
     },
     python_requires="~=3.8",
     use_scm_version=True,

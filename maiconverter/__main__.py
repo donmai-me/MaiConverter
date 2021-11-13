@@ -1,3 +1,3 @@
-from .maiconverter import main
+from maiconverter.cli import main
 
 main()

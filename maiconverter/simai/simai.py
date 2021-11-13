@@ -229,7 +229,7 @@ class SimaiChart:
         is_break: bool = False,
         is_star: bool = False,
         is_ex: bool = False,
-    ) -> None:
+    ) -> SimaiChart:
         """Adds a tap note to the list of notes.
 
         Args:
@@ -261,7 +261,9 @@ class SimaiChart:
         )
         self.notes.append(tap_note)
 
-    def del_tap(self, measure: float, position: int) -> None:
+        return self
+
+    def del_tap(self, measure: float, position: int) -> SimaiChart:
         """Deletes a tap note from the list of notes.
 
         Args:
@@ -284,13 +286,15 @@ class SimaiChart:
         for note in tap_notes:
             self.notes.remove(note)
 
+        return self
+
     def add_hold(
         self,
         measure: float,
         position: int,
         duration: float,
         is_ex: bool = False,
-    ) -> None:
+    ) -> SimaiChart:
         """Adds a hold note to the list of notes.
 
         Args:
@@ -311,7 +315,9 @@ class SimaiChart:
         hold_note = HoldNote(measure, position, duration, is_ex)
         self.notes.append(hold_note)
 
-    def del_hold(self, measure: float, position: int) -> None:
+        return self
+
+    def del_hold(self, measure: float, position: int) -> SimaiChart:
         """Deletes the matching hold note in the list of notes. If there are multiple
         matches, all matching notes are deleted. If there are no match, nothing happens.
 
@@ -337,6 +343,8 @@ class SimaiChart:
         for note in hold_notes:
             self.notes.remove(note)
 
+        return self
+
     def add_slide(
         self,
         measure: float,
@@ -346,7 +354,7 @@ class SimaiChart:
         pattern: str,
         delay: float = 0.25,
         reflect_position: Optional[int] = None,
-    ) -> None:
+    ) -> SimaiChart:
         """Adds both a slide note to the list of notes.
 
         Args:
@@ -381,12 +389,14 @@ class SimaiChart:
         )
         self.notes.append(slide_note)
 
+        return self
+
     def del_slide(
         self,
         measure: float,
         start_position: int,
         end_position: int,
-    ) -> None:
+    ) -> SimaiChart:
         slide_notes = [
             x
             for x in self.notes
@@ -398,22 +408,26 @@ class SimaiChart:
         for note in slide_notes:
             self.notes.remove(note)
 
+        return self
+
     def add_touch_tap(
         self,
         measure: float,
         position: int,
         region: str,
         is_firework: bool = False,
-    ) -> None:
+    ) -> SimaiChart:
         touch_tap_note = TouchTapNote(measure, position, region, is_firework)
         self.notes.append(touch_tap_note)
+
+        return self
 
     def del_touch_tap(
         self,
         measure: float,
         position: int,
         region: str,
-    ) -> None:
+    ) -> SimaiChart:
         touch_taps = [
             x
             for x in self.notes
@@ -425,6 +439,8 @@ class SimaiChart:
         for note in touch_taps:
             self.notes.remove(note)
 
+        return self
+
     def add_touch_hold(
         self,
         measure: float,
@@ -432,18 +448,20 @@ class SimaiChart:
         region: str,
         duration: float,
         is_firework: bool = False,
-    ) -> None:
+    ) -> SimaiChart:
         touch_hold_note = TouchHoldNote(
             measure, position, region, duration, is_firework
         )
         self.notes.append(touch_hold_note)
+
+        return self
 
     def del_touch_hold(
         self,
         measure: float,
         position: int,
         region: str,
-    ) -> None:
+    ) -> SimaiChart:
         touch_holds = [
             x
             for x in self.notes
@@ -455,7 +473,9 @@ class SimaiChart:
         for note in touch_holds:
             self.notes.remove(note)
 
-    def set_bpm(self, measure: float, bpm: float) -> None:
+        return self
+
+    def set_bpm(self, measure: float, bpm: float) -> SimaiChart:
         """Sets the bpm at given measure.
 
         Note:
@@ -478,6 +498,8 @@ class SimaiChart:
 
         bpm_event = BPM(measure, bpm)
         self.bpms.append(bpm_event)
+
+        return self
 
     def get_bpm(self, measure: float) -> float:
         """Gets the bpm at given measure.
@@ -521,7 +543,7 @@ class SimaiChart:
 
         return previous_bpm
 
-    def del_bpm(self, measure: float):
+    def del_bpm(self, measure: float) -> SimaiChart:
         """Deletes the bpm at given measure.
 
         Note:
@@ -542,17 +564,21 @@ class SimaiChart:
         for x in bpms:
             self.bpms.remove(x)
 
-    def offset(self, offset: Union[float, str]) -> None:
+        return self
+
+    def offset(self, offset: Union[float, str]) -> SimaiChart:
         offset = offset_arg_to_measure(offset, self.second_to_measure)
 
         for note in self.notes:
             note.measure = round(note.measure + offset, 4)
 
         for bpm in self.bpms:
-            if bpm.measure == 0:
+            if 0 <= bpm.measure <= 1:
                 continue
 
             bpm.measure = round(bpm.measure + offset, 4)
+
+        return self
 
     def measure_to_second(self, measure: float) -> float:
         bpms = [(bpm.measure, bpm.bpm) for bpm in self.bpms]

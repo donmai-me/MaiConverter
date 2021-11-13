@@ -1,13 +1,12 @@
 import math
 from typing import Tuple
 
-from ..event import MaiNote, NoteType, Event, EventType
+from maiconverter.event import MaiNote, NoteType, Event, EventType
+from maiconverter.tool import slide_distance
 
 # Dictionary for a note type's representation in ma2
 # Does not cover slide notes, BPM, and meter events.
 # Use slide_dict for slides instead.
-from ..tool import slide_distance
-
 note_dict = {
     "TAP": 1,
     "HLD": 2,
