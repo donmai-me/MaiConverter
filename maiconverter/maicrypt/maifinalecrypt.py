@@ -26,7 +26,9 @@ def finale_decrypt(
     ciphertext: bytes,
 ) -> bytes:
     if not isinstance(key, bytes):
-        key = int(key, 0).to_bytes(0x10, "big")
+        key = int(key.replace(" ", ""), 0).to_bytes(0x10, "big")
+    if len(key) != 0x10:
+        raise ValueError("Invalid key length")
 
     cipher = AES.new(key, AES.MODE_CBC, iv)
     gzipdata = cipher.decrypt(ciphertext)
@@ -49,7 +51,7 @@ def finale_encrypt(
     plaintext: bytes,
 ) -> bytes:
     if not isinstance(key, bytes):
-        key = unhexlify(key.replace(" ", ""))
+        key = int(key.replace(" ", ""), 0).to_bytes(0x10, "big")
     if len(key) != 0x10:
         raise ValueError("Invalid key length")
 

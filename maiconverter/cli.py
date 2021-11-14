@@ -216,11 +216,11 @@ def handle_file(input_path, output_dir, command, key):
     file_name = os.path.splitext(os.path.basename(input_path))[0]
     if command == "encrypt":
         file_ext = os.path.splitext(input_path)[1].replace("t", "b")
-        output = finale_file_encrypt(key, input_path)
+        output = finale_file_encrypt(input_path, key)
 
     else:
         file_ext = os.path.splitext(input_path)[1].replace("b", "t")
-        output = finale_file_decrypt(key, input_path)
+        output = finale_file_decrypt(input_path, key)
 
     with open(os.path.join(output_dir, file_name + file_ext), "wb") as f:
         f.write(output)
