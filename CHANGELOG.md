@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.2] - 2021-12-17
+### Fixed
+- Fixes ma2 export being offset by one measure
+- Fixes 360 degree slide conversion from ma2 to simai. [GitHub Issue](https://github.com/donmai-me/MaiConverter/issues/9)
+
+### Added
+- Initial PyTest folder
+
 ## [0.14.1] - 2021-11-14
 ### Fixed
 - Fixed bugs in finale charts encrypt/decrypt.
@@ -46,7 +54,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ma2 to Sdt conversion and vice versa.
 - Simai to Sdt conversion and vice versa.
 
-[Unreleased]: https://github.com/donmai-me/MaiConverter/compare/0.14.1...HEAD
+[Unreleased]: https://github.com/donmai-me/MaiConverter/compare/0.14.2...HEAD
+[0.14.2]: https://github.com/donmai-me/MaiConverter/compare/0.14.1...0.14.2
 [0.14.1]: https://github.com/donmai-me/MaiConverter/compare/0.14.0...0.14.1
 [0.14.0]: https://github.com/donmai-me/MaiConverter/compare/0.13.0...0.14.0
 [0.13.0]: https://github.com/donmai-me/MaiConverter/compare/0.12.0...0.13.0
