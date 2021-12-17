@@ -84,7 +84,7 @@ class SlideNote(MaiNote):
         self.duration = duration
 
     def to_str(self, resolution: int = 384) -> str:
-        measure = measure_to_ma2_time(self.measure + 1.0, resolution)
+        measure = measure_to_ma2_time(self.measure, resolution)
         template = "{}\t{}\t{}\t{}\t{}\t{}\t{}"
         inv_slide_dict = {v: k for k, v in slide_dict.items()}
         if self.pattern not in inv_slide_dict:
@@ -137,7 +137,7 @@ class HoldNote(MaiNote):
         self.duration = duration
 
     def to_str(self, resolution: int) -> str:
-        measure = measure_to_ma2_time(self.measure + 1.0, resolution)
+        measure = measure_to_ma2_time(self.measure, resolution)
         template = "HLD\t{}\t{}\t{}\t{}"
         duration = round(self.duration * resolution)
         return template.format(measure[0], measure[1], self.position, duration)
@@ -179,7 +179,7 @@ class TapNote(MaiNote):
             super().__init__(measure, position, NoteType.tap)
 
     def to_str(self, resolution: int) -> str:
-        measure = measure_to_ma2_time(self.measure + 1.0, resolution)
+        measure = measure_to_ma2_time(self.measure, resolution)
         template = "{}\t{}\t{}\t{}"
         inv_note_dict = {v: k for k, v in note_dict.items()}
         if self.note_type.value not in inv_note_dict:
@@ -231,7 +231,7 @@ class TouchTapNote(MaiNote):
         self.size = size
 
     def to_str(self, resolution: int) -> str:
-        measure = measure_to_ma2_time(self.measure + 1.0, resolution)
+        measure = measure_to_ma2_time(self.measure, resolution)
         template = "TTP\t{}\t{}\t{}\t{}\t{}\t{}"
         fireworks = 1 if self.is_firework else 0
         return template.format(
@@ -289,7 +289,7 @@ class TouchHoldNote(MaiNote):
         self.size = size
 
     def to_str(self, resolution: int) -> str:
-        measure = measure_to_ma2_time(self.measure + 1.0, resolution)
+        measure = measure_to_ma2_time(self.measure, resolution)
         template = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}"
         name = "THO"
         duration = round(self.duration * resolution)
@@ -337,7 +337,7 @@ class BPM(Event):
         if self.measure == 0.0:
             measure = (0, 0)
         else:
-            measure = measure_to_ma2_time(self.measure + 1.0, resolution)
+            measure = measure_to_ma2_time(self.measure, resolution)
 
         template = "BPM\t{}\t{}\t{:.3f}"
         return template.format(measure[0], measure[1], self.bpm)
@@ -381,7 +381,7 @@ class Meter(Event):
         if self.measure == 0.0:
             measure = (0, 0)
         else:
-            measure = measure_to_ma2_time(self.measure + 1.0, resolution)
+            measure = measure_to_ma2_time(self.measure, resolution)
 
         template = "MET\t{}\t{}\t{}\t{}"
         return template.format(measure[0], measure[1], self.numerator, self.denominator)
