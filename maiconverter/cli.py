@@ -2,6 +2,7 @@ import os
 import argparse
 import re
 import traceback
+import sys
 
 import maiconverter
 from maiconverter.maicrypt import finale_file_encrypt, finale_file_decrypt
@@ -110,9 +111,9 @@ def chart_convert(args, output):
             else:
                 handle_simai_chart(file, name, output, args)
 
-        except Exception as e:
-            print(f"Error occurred processing {file}. {e}")
-            traceback.print_exc()
+        except:
+            print(f"Error occurred processing {file}.")
+            raise
 
 
 def handle_ma2(file, name, output_path, args):
@@ -207,9 +208,9 @@ def handle_simai_file(file, output_path, args):
                     out.write(converted.export())
                 else:
                     out.write(converted.export(resolution=args.resolution))
-        except Exception as e:
-            print(f"Error processing {i + 1} chart of file. {e}")
-            traceback.print_exc()
+        except:
+            print(f"Error processing {i + 1} chart of file.")
+            raise
 
 
 def handle_file(input_path, output_dir, command, key):
@@ -353,12 +354,13 @@ def main():
     elif os.path.exists(output_dir) and not os.path.isdir(output_dir):
         raise NotADirectoryError(output_dir)
 
-    if args.command in ["encrypt", "decrypt"]:
-        crypto(args, output_dir)
-    else:
-        chart_convert(args, output_dir)
-
-    print(
-        "Finished. Join MaiMai Tea Discord server for more info and tools about MaiMai modding!"
-    )
-    print("https://discord.gg/WxEMM9dnwR")
+    try:
+        if args.command in ["encrypt", "decrypt"]:
+            crypto(args, output_dir)
+        else:
+            chart_convert(args, output_dir)
+    finally:
+        print(
+            "Finished. Join MaiMai Tea Discord server for more info and tools about MaiMai modding!"
+        )
+        print("https://discord.gg/WxEMM9dnwR")
