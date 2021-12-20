@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.3] - 2021-12-20
+### Fixed
+- Fixed exceptions raised when ma2 TouchHoldNote has a 0 length
+
+### Changed
+- Batch conversions will no longer continue when one fails.
+- Program should no longer return exit code 0 for failed conversions.
+
 ## [0.14.2] - 2021-12-17
 ### Fixed
 - Fixes ma2 export being offset by one measure
@@ -54,7 +62,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ma2 to Sdt conversion and vice versa.
 - Simai to Sdt conversion and vice versa.
 
-[Unreleased]: https://github.com/donmai-me/MaiConverter/compare/0.14.2...HEAD
+[Unreleased]: https://github.com/donmai-me/MaiConverter/compare/0.14.3...HEAD
+[0.14.3]: https://github.com/donmai-me/MaiConverter/compare/0.14.2...0.14.3
 [0.14.2]: https://github.com/donmai-me/MaiConverter/compare/0.14.1...0.14.2
 [0.14.1]: https://github.com/donmai-me/MaiConverter/compare/0.14.0...0.14.1
 [0.14.0]: https://github.com/donmai-me/MaiConverter/compare/0.13.0...0.14.0

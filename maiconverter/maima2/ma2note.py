@@ -275,8 +275,8 @@ class TouchHoldNote(MaiNote):
 
             >>> touch_tap = TouchHoldNote(1, 0, "C", 1.5)
         """
-        if duration <= 0:
-            raise ValueError(f"Hold duration is not positive: {duration} ")
+        if duration < 0:
+            raise ValueError(f"Hold duration is negative: {duration} ")
         if size not in ["M1", "L1"]:
             raise ValueError(f"Invalid size given: {size}")
 
