@@ -827,9 +827,9 @@ class MaiMa2:
 
         # BPM and meters
         self.bpms.sort(key=lambda x: x.measure)
-        result += "\n".join([bpm.to_str(resolution) for bpm in self.bpms])
+        result += "\n".join([bpm.to_str(resolution) for bpm in self.bpms]) + "\n"
         self.meters.sort(key=lambda x: x.measure)
-        result += "\n".join([meter.to_str(resolution) for meter in self.meters])
+        result += "\n".join([meter.to_str(resolution) for meter in self.meters]) + "\n"
         result += "\n"
 
         self.notes.sort()

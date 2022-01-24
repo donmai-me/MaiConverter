@@ -596,7 +596,7 @@ class SimaiChart:
         measures = [event.measure for event in self.notes + self.bpms]
 
         measures += [int(i) for i in measures]
-        measures.append(0.0)
+        measures.append(1.0)
 
         measures = list(set(measures))
         last_whole_measure = max([int(measure) for measure in measures])
@@ -614,10 +614,10 @@ class SimaiChart:
             whole_divisors.append(get_measure_divisor(note_measures))
 
         # last_measure takes into account slide and hold notes' end measure
-        last_measure = 0.0
+        last_measure = 1.0
         # measure_tick is our time-tracking variable. Used to know what measure
         # are we in-between rests ","
-        measure_tick = 0.0
+        measure_tick = 1.0
         # previous_divisor is used for comparing to current_divisor
         # to know if we should add a "{}" indicator
         previous_divisor: Optional[int] = None

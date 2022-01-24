@@ -168,10 +168,17 @@ class FragmentTransformer(Transformer):
         }
 
     def chained_slide_note(self, items) -> dict:
-        (
-            text,
-            duration_dict,
-        ) = items
+        if len(items) == 2:
+            (
+                text,
+                duration_dict,
+            ) = items
+            duration = duration_dict["duration"]
+            equivalent_bpm = duration_dict["equivalent_bpm"]
+        else:
+            (text,) = items
+            duration = None
+            equivalent_bpm = None
 
         # Skip the modifiers in a chained slide
         for i, char in enumerate(text):
@@ -193,12 +200,6 @@ class FragmentTransformer(Transformer):
             text = text[2:]
 
         end = int(text[0]) - 1
-
-        if not isinstance(duration_dict, dict):
-            raise ValueError(f"Not a dict: {duration_dict}")
-
-        duration = duration_dict["duration"]
-        equivalent_bpm = duration_dict["equivalent_bpm"]
 
         return {
             "type": "chained_slide_note",
@@ -255,7 +256,9 @@ class FragmentTransformer(Transformer):
             slides.append(note_dict)
 
         if len(chained_slides) != 0:
-            slides += process_chained_slides(start, modifier + "*", chained_slides)
+            slides += process_chained_slides(
+                start, duration, equivalent_bpm, modifier + "*", chained_slides
+            )
 
         if len(slides) > 0:
             return slides
@@ -389,11 +392,24 @@ class FragmentTransformer(Transformer):
         return result
 
 
-def process_chained_slides(start_button, slide_modifier, chained_slides):
+def process_chained_slides(
+    start_button: int,
+    duration: dict,
+    equivalent_bpm: dict,
+    slide_modifier: str,
+    chained_slides: List[dict],
+):
     complete_slides = []
     for slide in chained_slides:
         if start_button == -1 or slide["reflect"] == -1 or slide["end"] == -1:
             continue
+
+        duration = duration if slide["duration"] is None else slide["duration"]
+        equivalent_bpm = (
+            equivalent_bpm
+            if slide["equivalent_bpm"] is None
+            else slide["equivalent_bpm"]
+        )
 
         note_dict = {
             "type": "slide",
@@ -402,8 +418,8 @@ def process_chained_slides(start_button, slide_modifier, chained_slides):
             "pattern": slide["pattern"],
             "reflect_position": slide["reflect"],
             "end_button": slide["end"],
-            "duration": slide["duration"],
-            "equivalent_bpm": slide["equivalent_bpm"],
+            "duration": duration,
+            "equivalent_bpm": equivalent_bpm,
         }
         complete_slides.append(note_dict)
 

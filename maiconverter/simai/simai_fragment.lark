@@ -27,7 +27,7 @@ tap_hold_note: /[0-8][hbex$]*/ duration?
 
 slide_beg: /[0-8][b@x?$!]*([-^<>szvw]|p{1,2}|q{1,2}|V[0-8])[0-8]/
 slide_note: slide_beg duration chained_slide_note*
-chained_slide_note: "*" /[b@ex?$!]*([-^<>szvw]|p{1,2}|q{1,2}|V[0-8])[0-8]/ duration
+chained_slide_note: "*" /[b@ex?$!]*([-^<>szvw]|p{1,2}|q{1,2}|V[0-8])[0-8]/ duration?
 
 touch_tap_hold_note: /((C[012]?)|(B[0-8])|(E[0-8])|(A[0-8])|(D[0-8]))[hfe]*/ duration?
 

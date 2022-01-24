@@ -4,9 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.14.4] - 2022-01-24
+### Fixed
+- Missing new line in BPM and MET lines in ma2.
+- Fixed bug in simaitoma2 and ma2tosimai BPM conversion.
+- Fixed bug in simai export.
+
+### Added
+- Support for 2Simai quirk where simultaneous slide's duration is optional.
+
 ## [0.14.3] - 2021-12-20
 ### Fixed
-- Fixed exceptions raised when ma2 TouchHoldNote has a 0 length
+- Fixed exceptions raised when ma2 TouchHoldNote has a 0 length.
 
 ### Changed
 - Batch conversions will no longer continue when one fails.
@@ -62,7 +73,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ma2 to Sdt conversion and vice versa.
 - Simai to Sdt conversion and vice versa.
 
-[Unreleased]: https://github.com/donmai-me/MaiConverter/compare/0.14.3...HEAD
+[Unreleased]: https://github.com/donmai-me/MaiConverter/compare/0.14.4...HEAD
+[0.14.4]: https://github.com/donmai-me/MaiConverter/compare/0.14.3...0.14.4
 [0.14.3]: https://github.com/donmai-me/MaiConverter/compare/0.14.2...0.14.3
 [0.14.2]: https://github.com/donmai-me/MaiConverter/compare/0.14.1...0.14.2
 [0.14.1]: https://github.com/donmai-me/MaiConverter/compare/0.14.0...0.14.1
