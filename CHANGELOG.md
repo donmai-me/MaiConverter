@@ -6,9 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.5] - 2022-02-10
+### Changed
+- Changed behaviour of `ma2_to_simai` and `simai_to_ma2` to compensate for the fact that Simai disregards BPM changes for slide delays, and slide and hold durations.
+
 ## [0.14.4] - 2022-01-24
 ### Fixed
-- Missing new line in BPM and MET lines in ma2.
+- Fixed missing new line in BPM and MET lines in ma2.
 - Fixed bug in simaitoma2 and ma2tosimai BPM conversion.
 - Fixed bug in simai export.
 
@@ -73,7 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ma2 to Sdt conversion and vice versa.
 - Simai to Sdt conversion and vice versa.
 
-[Unreleased]: https://github.com/donmai-me/MaiConverter/compare/0.14.4...HEAD
+[Unreleased]: https://github.com/donmai-me/MaiConverter/compare/0.14.5...HEAD
+[0.14.5]: https://github.com/donmai-me/MaiConverter/compare/0.14.4...0.14.5
 [0.14.4]: https://github.com/donmai-me/MaiConverter/compare/0.14.3...0.14.4
 [0.14.3]: https://github.com/donmai-me/MaiConverter/compare/0.14.2...0.14.3
 [0.14.2]: https://github.com/donmai-me/MaiConverter/compare/0.14.1...0.14.2

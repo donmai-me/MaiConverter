@@ -1,10 +1,21 @@
-from typing import Sequence
+from typing import Sequence, List
 
 from ..simai import (
     SimaiChart,
     pattern_from_int,
+    HoldNote as SimaiHoldNote,
+    TouchHoldNote as SimaiTouchHoldNote,
+    SlideNote as SimaiSlideNote,
 )
-from ..maima2 import MaiMa2, TapNote, HoldNote, SlideNote, TouchTapNote, TouchHoldNote
+from ..maima2 import (
+    MaiMa2,
+    TapNote,
+    HoldNote,
+    SlideNote,
+    TouchTapNote,
+    TouchHoldNote,
+    BPM,
+)
 from ..event import MaiNote, NoteType
 
 
@@ -17,6 +28,9 @@ def ma2_to_simai(ma2: MaiMa2) -> SimaiChart:
         simai_chart.set_bpm(measure, bpm.bpm)
 
     convert_notes(simai_chart, ma2.notes)
+
+    if len(simai_chart.bpms) != 1:
+        fix_durations(simai_chart)
 
     return simai_chart
 
@@ -79,3 +93,55 @@ def convert_notes(simai_chart: SimaiChart, ma2_notes: Sequence[MaiNote]) -> None
             )
         else:
             print("Warning: Unknown note type {}".format(note_type))
+
+
+def fix_durations(simai: SimaiChart):
+    """Simai note durations (slide delay, slide duration, hold note duration)
+    disregards bpm changes midway, unlike ma2. So we'll have to compensate for those.
+    """
+
+    def bpm_changes(start: float, duration: float) -> List[BPM]:
+        result: List[BPM] = []
+        for bpm in simai.bpms:
+            if start < bpm.measure < start + duration:
+                result.append(bpm)
+
+        return result
+
+    def compensate_duration(
+        start: float, duration: float, base_bpm: float, changes: List[BPM]
+    ) -> float:
+        new_duration = 0
+
+        note_start = start
+        for bpm in changes:
+            new_duration += (
+                base_bpm
+                * (bpm.measure - note_start)
+                / simai.get_bpm(bpm.measure - 0.0001)
+            )
+
+            note_start = bpm.measure
+
+        if note_start < start + duration:
+            new_duration += (
+                base_bpm
+                * (start + duration - note_start)
+                / simai.get_bpm(note_start + 0.0001)
+            )
+
+        return new_duration
+
+    for note in simai.notes:
+        if isinstance(note, (SimaiHoldNote, SimaiTouchHoldNote, SimaiSlideNote)):
+            bpms = bpm_changes(note.measure, note.duration)
+            if len(bpms) != 0:
+                note.duration = compensate_duration(
+                    note.measure, note.duration, simai.get_bpm(note.measure), bpms
+                )
+        if isinstance(note, SimaiSlideNote):
+            bpms = bpm_changes(note.measure, note.delay)
+            if len(bpms) != 0:
+                note.delay = compensate_duration(
+                    note.measure, note.delay, simai.get_bpm(note.measure), bpms
+                )
