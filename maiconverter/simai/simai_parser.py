@@ -330,7 +330,7 @@ class FragmentTransformer(Transformer):
             position = 0
             text = text[1:]
 
-        if region not in "CBE" or position == -1:
+        if region not in "CBEAD" or position == -1:
             return
 
         is_tap = True
