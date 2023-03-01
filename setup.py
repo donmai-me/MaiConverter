@@ -1,7 +1,10 @@
 from setuptools import setup
 
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
+with open("README.md") as f:
+    long_description = f.read()
+
+with open("requirements.txt") as f:
+    requirements = f.read()
 
 setup(
     name="MaiConverter",
@@ -33,8 +36,9 @@ setup(
     entry_points={
         "console_scripts": ["maiconverter=maiconverter.cli:main"],
     },
-    python_requires="~=3.8",
+    python_requires=">=3.7",
     use_scm_version=True,
     setup_requires=["setuptools_scm"],
-    install_requires=["pycryptodome~=3.9", "lark-parser~=0.11"],
+    install_requires=requirements,
+    extras_requires={':python_version < "3.8"': ["importlib-metadata"]},
 )

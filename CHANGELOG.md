@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.6] - 2023-03-01
+### Added
+- Support for Python version 3.7 [GitHub Issue](https://github.com/donmai-me/MaiConverter/issues/12)
+
+### Fixed
+- Fixed parsing of negative `&first` Simai tags. Credit to [ReiFan49](https://github.com/ReiFan49)
+
 ## [0.14.5] - 2022-02-10
 ### Changed
 - Changed behaviour of `ma2_to_simai` and `simai_to_ma2` to compensate for the fact that Simai disregards BPM changes for slide delays, and slide and hold durations.
@@ -77,7 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ma2 to Sdt conversion and vice versa.
 - Simai to Sdt conversion and vice versa.
 
-[Unreleased]: https://github.com/donmai-me/MaiConverter/compare/0.14.5...HEAD
+[Unreleased]: https://github.com/donmai-me/MaiConverter/compare/0.14.6...HEAD
+[0.14.6]: https://github.com/donmai-me/MaiConverter/compare/0.14.5...0.14.6
 [0.14.5]: https://github.com/donmai-me/MaiConverter/compare/0.14.4...0.14.5
 [0.14.4]: https://github.com/donmai-me/MaiConverter/compare/0.14.3...0.14.4
 [0.14.3]: https://github.com/donmai-me/MaiConverter/compare/0.14.2...0.14.3
